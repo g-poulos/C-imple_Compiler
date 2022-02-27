@@ -12,24 +12,31 @@ def isNumber(file):
     while True:
             character = file.read(1)
             if(not character.isnumeric()):
-                return recognized_string
+                return recognized_string, "number"
             elif(int(character) in range(10)):
                 recognized_string = recognized_string + character
 
-def isAddOperator(file):
+def isSimple(file):
+    group_symbol_list = ["{", "}", "(", ")", "[", "]"]
+    delimeter_list = [",", ";", "."]
+
     character = file.read(1)
-    #if(character == "+"):
-    #    recognized_st
-    #elif(character == "-"):
+    if(character == "+"):
+        return character, "addOperator"
+    elif(character == "-"):
+        return character, "addOperator"
+    elif(character in group_symbol_list):
+        return character, "groupSymbol"
+    elif(character in delimeter_list):
+        return character, "delimeter"
 
 def lex(file):
     family = ""
     line_counter = 0
-    
-    recognized_string = isNumber(file)
-    if(recognized_string != ""):
-        family = "number"
-    
+
+    recognized_string, family = isNumber(file)
+    recognized_string, family = isSimple(file)
+
     print(recognized_string + " family: " + family + " line: ", line_counter)
     return Token(recognized_string, family, line_counter)
 
