@@ -54,7 +54,7 @@ def isrelOperator(file):
                 recognized_string = second_char
                 return character, "relOperator"
 
-#TODO: Want to pass the seconf char to the next call so as the next call does not lose the part we have readen.
+#TODO: Want to pass the second_char to the next call so it does not lose the part we have already readen.
 
 def isSimple(file):
     group_symbol_list = ["{", "}", "(", ")", "[", "]"]
