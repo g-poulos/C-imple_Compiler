@@ -16,6 +16,15 @@ def isNumber(file):
             elif(int(character) in range(10)):
                 recognized_string = recognized_string + character
 
+def isKeyword(file):
+    recognized_string = ""
+    while True:
+            character = file.read(1)
+            if not character.isnumeric() and not character.isalpha():
+                return recognized_string, "keyword"
+            else:
+                recognized_string = recognized_string + character
+
 def isSimple(file):
     group_symbol_list = ["{", "}", "(", ")", "[", "]"]
     delimeter_list = [",", ";", "."]
@@ -34,8 +43,9 @@ def lex(file):
     family = ""
     line_counter = 0
 
-    recognized_string, family = isNumber(file)
-    recognized_string, family = isSimple(file)
+    #recognized_string, family = isNumber(file)
+    #recognized_string, family = isSimple(file)
+    recognized_string, family = isKeyword(file)
 
     print(recognized_string + " family: " + family + " line: ", line_counter)
     return Token(recognized_string, family, line_counter)
