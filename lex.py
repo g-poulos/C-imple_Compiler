@@ -7,17 +7,31 @@ class Token:
         self.family = family
         self.line_number = line_number
 
-
-def lex(file):
+def isNumber(file):
     recognized_string = ""
     while True:
-        character = file.read(1)
-        while int(character) in range(0, 9):
-            recognized_string = recognized_string + character
             character = file.read(1)
-        print(recognized_string)
-        break
+            if(not character.isnumeric()):
+                return recognized_string
+            elif(int(character) in range(10)):
+                recognized_string = recognized_string + character
 
+def isAddOperator(file):
+    character = file.read(1)
+    #if(character == "+"):
+    #    recognized_st
+    #elif(character == "-"):
+
+def lex(file):
+    family = ""
+    line_counter = 0
+    
+    recognized_string = isNumber(file)
+    if(recognized_string != ""):
+        family = "number"
+    
+    print(recognized_string + " family: " + family + " line: ", line_counter)
+    return Token(recognized_string, family, line_counter)
 
 def main():
     if(len(sys.argv) < 3):
