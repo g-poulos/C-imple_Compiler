@@ -1,5 +1,6 @@
 import sys
 
+line_counter = 1
 
 class Token:
     def __init__(self, recognized_string, family, line_number):
@@ -7,14 +8,19 @@ class Token:
         self.family = family
         self.line_number = line_number
 
-def isNumber(file):
-    recognized_string = ""
-    while True:
-            character = file.read(1)
-            if(not character.isnumeric()):
-                return recognized_string, "number"
-            elif(int(character) in range(10)):
-                recognized_string = recognized_string + character
+def is_number(file, character):
+    recognized_string = character
+    while(True):
+        if(character.isnumeric()):
+            recognized_string = recognized_string + character
+        elif(character.isalpha()):
+            # Error if a letter is inside of a number 
+            file.seek(file.tell()-1)
+            sys.exit("ERROR: Expected number but found " + character + " at line " + str(line_counter))
+        else:
+            file.seek(file.tell()-1)
+            return recognized_string, "number"
+        character = file.read(1)
 
 def isKeyword(file):
     recognized_string = ""
@@ -70,6 +76,7 @@ def isSimple(file):
     elif(character in delimeter_list):
         return character, "delimeter"
     else:
+        file.seek(file.tell()-1)
         return "", ""
 
 def clearBlankChar(file):
@@ -84,13 +91,17 @@ def clearBlankChar(file):
 
 def lex(file):
     family = ""
-    line_counter = 0
+    character = file.read(1)
+    #clearBlankChar(file)
+    recognized_string, family = is_number(file, character)
 
-    #recognized_string, family = isNumber(file)
+    
     #recognized_string, family = isSimple(file)
+    
     #recognized_string, family = isKeyword(file)
+
     #recognized_string, family = isAssignment(file)
-    recognized_string, family = isrelOperator(file)
+    #recognized_string, family = isrelOperator(file)
 
     print(recognized_string + " family: " + family + " line: ", line_counter)
     return Token(recognized_string, family, line_counter)
