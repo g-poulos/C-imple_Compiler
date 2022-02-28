@@ -9,12 +9,11 @@ class Token:
         self.line_number = line_number
 
 def is_number(file, character):
-    recognized_string = character
-    while(True):
+    recognized_string = ""
+    while(True):        
         if(character.isnumeric()):
             recognized_string = recognized_string + character
         elif(character.isalpha()):
-            # Error if a letter is inside of a number 
             file.seek(file.tell()-1)
             sys.exit("ERROR: Expected number but found " + character + " at line " + str(line_counter))
         else:
@@ -79,21 +78,26 @@ def isSimple(file):
         file.seek(file.tell()-1)
         return "", ""
 
-def clearBlankChar(file):
-    character = file.read(1)
+def clearBlankChar(file, character):
     while(True):
-        print(character)
         if(not character.isspace()):
-            file.seek(file.tell()-1)
-            break
+            return character
+        else:
+            character = file.read(1)
+
+def is_comment(file, character):
+    while(character != "#"):
         character = file.read(1)
-
-
+        if(not character):
+            sys.exit("ERROR: Expected '#' but reached EOF")
+    
 def lex(file):
     family = ""
     character = file.read(1)
-    #clearBlankChar(file)
-    recognized_string, family = is_number(file, character)
+
+    character = clearBlankChar(file, character)
+    is_comment(file, character)
+    #recognized_string, family = is_number(file, character)
 
     
     #recognized_string, family = isSimple(file)
@@ -103,8 +107,8 @@ def lex(file):
     #recognized_string, family = isAssignment(file)
     #recognized_string, family = isrelOperator(file)
 
-    print(recognized_string + " family: " + family + " line: ", line_counter)
-    return Token(recognized_string, family, line_counter)
+    #print(recognized_string + " family: " + family + " line: ", line_counter)
+    #return Token(recognized_string, family, line_counter)
 
 def main():
     if(len(sys.argv) < 3):
