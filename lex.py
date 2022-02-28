@@ -78,6 +78,8 @@ def is_simple(file, first_char):
         return character, "groupSymbol"
     elif (character in delimeter_list):
         return character, "delimeter"
+    elif (not character):
+        return character, "EOF"
     else:
         file.seek(file.tell() - 1)
         return "", ""
@@ -122,11 +124,16 @@ def main():
     if (len(sys.argv) != 2):
         # Temporary usage
         sys.exit("ERROR: Usage $ python lex.py <inputfile>")
-    
-    with open(sys.argv[1], "r") as file:
-        pointer = 0
-        for line in file:
-            pointer, token = lex(file, pointer)
+
+    current_pointer = 0
+    next_pointer = -1
+    with open(sys.argv[1], "r") as file: 
+        while True:
+            next_pointer, token = lex(file, current_pointer)
+            #print(current_pointer, next_pointer)
+            if (next_pointer == current_pointer):
+                break
+            current_pointer = next_pointer
 
 if __name__ == "__main__":
     main()
