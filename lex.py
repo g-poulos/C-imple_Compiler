@@ -95,7 +95,8 @@ def is_comment(file, character):
         if(not character):
             sys.exit("ERROR: Expected '#' but reached EOF")
     
-def lex(file):
+def lex(file, file_pointer):
+    file.seek(file_pointer)
     family = ""
     first_char = file.read(1)
     clear_blank_char(file, first_char)
@@ -109,19 +110,23 @@ def lex(file):
     elif first_char == ">" or first_char == "<":
         recognized_string, family = is_rel_operator(file, first_char)
     else:
-        recognized_string, family = is_simple(file)
+        recognized_string, family = is_simple(file, first_char)
 
+    file_pointer = file.tell()
+    file.seek(0)
     print(recognized_string + " family: " + family + " line: ", line_counter)
-    return Token(recognized_string, family, line_counter)
+    return file_pointer, Token(recognized_string, family, line_counter)
 
 
 def main():
-    if (len(sys.argv) < 3):
-        print(sys.argv[1])
-
-    file = open(sys.argv[1], "r")
-    lex(file)
-
+    if (len(sys.argv) != 2):
+        # Temporary usage
+        sys.exit("ERROR: Usage $ python lex.py <inputfile>")
+    
+    with open(sys.argv[1], "r") as file:
+        pointer = 0
+        for line in file:
+            pointer, token = lex(file, pointer)
 
 if __name__ == "__main__":
     main()
