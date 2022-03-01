@@ -1,3 +1,4 @@
+from distutils import command
 import sys
 
 line_counter = 1
@@ -78,11 +79,8 @@ def is_simple(file, first_char):
         return character, "groupSymbol"
     elif (character in delimeter_list):
         return character, "delimeter"
-    elif (not character):
-        return character, "EOF"
     else:
-        file.seek(file.tell() - 1)
-        return "", ""
+        return "a", "a"   #What to do in case of no `.` at the end of the program 
 
 def clear_blank_char(file, character):
     while(True):
@@ -92,16 +90,18 @@ def clear_blank_char(file, character):
             character = file.read(1)
 
 def is_comment(file, character):
+    character = file.read(1)
     while(character != "#"):
         character = file.read(1)
         if(not character):
-            sys.exit("ERROR: Expected '#' but reached EOF")
+            sys.exit("ERROR: '#' was not closed, line: " + str(line_counter))
     
 def lex(file, file_pointer):
     file.seek(file_pointer)
     family = ""
+    recognized_string = ""
     first_char = file.read(1)
-    clear_blank_char(file, first_char)
+    first_char = clear_blank_char(file, first_char)
 
     if first_char.isnumeric():
         recognized_string, family = is_number(file, first_char)
@@ -111,12 +111,14 @@ def lex(file, file_pointer):
         recognized_string, family = is_assignment(file, first_char)
     elif first_char == ">" or first_char == "<":
         recognized_string, family = is_rel_operator(file, first_char)
-    else:
+    elif first_char == "#":
+        is_comment(file, first_char) # If there is a comment at the beginning lex() returns
+    else:                            # empty recognized_string and family 
         recognized_string, family = is_simple(file, first_char)
 
     file_pointer = file.tell()
     file.seek(0)
-    print(recognized_string + " family: " + family + " line: ", line_counter)
+    print(f"{recognized_string:12} family: {family:12} line: {line_counter:3}")
     return file_pointer, Token(recognized_string, family, line_counter)
 
 
