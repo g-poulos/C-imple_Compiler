@@ -1,9 +1,12 @@
 import sys
- 
+
 line_counter = 1
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
 operator_list = ["+", "-", "*", "/"]
+
+group_keyword_list = ["print", "program", "if", "switchcase", "not", "function", "input", "declare", "else", "forcase",
+                      "and", "procedure", "while", "incase", "or", "call", "case", "default", "return", "in", "inout"]
 
 
 class Token:
@@ -15,11 +18,10 @@ class Token:
 
 def is_number(file, character):
     recognized_string = ""
-    while(True):        
+    while (True):
         if (character.isnumeric()):
             recognized_string = recognized_string + character
         elif (character.isalpha()):
-            file.seek(file.tell()-1)
             sys.exit("ERROR: Expected number but found " + character + " at line " + str(line_counter))
         else:
             file.seek(file.tell() - 1)
@@ -33,12 +35,16 @@ def is_keyword(file, first_char):
         character = file.read(1)
         if not character.isnumeric() and not character.isalpha():
             if len(recognized_string) <= 30:
-                return recognized_string, "keyword"
+                file.seek(file.tell() - 1)
+                if recognized_string in group_keyword_list:
+                    return recognized_string, "keyword"
+                else:
+                    return recognized_string, "identifier"
             else:
                 sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(line_counter))
         else:
             recognized_string = recognized_string + character
-        
+
 
 
 def is_assignment(file, first_char):
@@ -56,7 +62,9 @@ def is_rel_operator(file, first_char):
     recognized_string = ""
     character = first_char
     while True:
-        if character == ">":
+        if character == "=":
+            return character, "relOperator"
+        elif character == ">":
             second_char = file.read(1)
             if second_char == "=":
                 recognized_string = character + second_char
@@ -107,7 +115,8 @@ def is_comment(file, character):
         character = file.read(1)
         if (not character):
             sys.exit("ERROR: '#' was not closed, line: " + str(line_counter))
-    
+
+
 def lex(file, file_pointer):
     file.seek(file_pointer)
     family = ""
@@ -121,7 +130,7 @@ def lex(file, file_pointer):
         recognized_string, family = is_keyword(file, first_char)
     elif first_char == ":":
         recognized_string, family = is_assignment(file, first_char)
-    elif first_char == ">" or first_char == "<":
+    elif first_char == ">" or first_char == "<" or first_char == "=":
         recognized_string, family = is_rel_operator(file, first_char)
     elif first_char == "#":
         is_comment(file, first_char) # If there is a comment at the beginning lex() returns empty recognized_string and family
