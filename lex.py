@@ -1,10 +1,10 @@
 import sys
-
-from pyparsing import line
  
 line_counter = 1
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
+operator_list = ["+", "-", "*", "/"]
+
 
 class Token:
     def __init__(self, recognized_string, family, line_number):
@@ -33,12 +33,12 @@ def is_keyword(file, first_char):
         character = file.read(1)
         if not character.isnumeric() and not character.isalpha():
             if len(recognized_string) <= 30:
-                file.seek(file.tell() - 1)
                 return recognized_string, "keyword"
             else:
                 sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(line_counter))
         else:
             recognized_string = recognized_string + character
+        
 
 
 def is_assignment(file, first_char):
@@ -77,10 +77,10 @@ def is_rel_operator(file, first_char):
 def is_simple(file, first_char):
 
     character = first_char
-    if (character == "+"):
+    if (character == "+" or character == "-"):
         return character, "addOperator"
-    elif (character == "-"):
-        return character, "addOperator"
+    elif (character == "*" or character == "/"):
+        return character, "mulOperator"
     elif (character in group_symbol_list):
         return character, "groupSymbol"
     elif (character in delimeter_list):
@@ -125,10 +125,10 @@ def lex(file, file_pointer):
         recognized_string, family = is_rel_operator(file, first_char)
     elif first_char == "#":
         is_comment(file, first_char) # If there is a comment at the beginning lex() returns empty recognized_string and family
-    elif first_char in group_symbol_list or first_char in delimeter_list:
+    elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
         recognized_string, family = is_simple(file, first_char)
     else:
-        sys.exit("ERROR: " + first_char + " do not belong at C-imple. line: " + str(line_counter))
+        sys.exit("ERROR: " + first_char + " does not belong at C-imple. line: " + str(line_counter))
 
     file_pointer = file.tell()
     file.seek(0)
