@@ -3,7 +3,8 @@ import sys
 from pyparsing import line
  
 line_counter = 1
-
+group_symbol_list = ["{", "}", "(", ")", "[", "]"]
+delimeter_list = [",", ";", "."]
 
 class Token:
     def __init__(self, recognized_string, family, line_number):
@@ -31,7 +32,11 @@ def is_keyword(file, first_char):
     while True:
         character = file.read(1)
         if not character.isnumeric() and not character.isalpha():
-            return recognized_string, "keyword"
+            if len(recognized_string) <= 30:
+                file.seek(file.tell() - 1)
+                return recognized_string, "keyword"
+            else:
+                sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(line_counter))
         else:
             recognized_string = recognized_string + character
 
@@ -43,6 +48,8 @@ def is_assignment(file, first_char):
     recognized_string = first_character + second_character
     if recognized_string == ":=":
         return recognized_string, "assignment"
+    else:
+        sys.exit("ERROR: Expected := but found " + first_char + second_character + " at line " + str(line_counter))
 
 
 def is_rel_operator(file, first_char):
@@ -68,8 +75,6 @@ def is_rel_operator(file, first_char):
 
 
 def is_simple(file, first_char):
-    group_symbol_list = ["{", "}", "(", ")", "[", "]"]
-    delimeter_list = [",", ";", "."]
 
     character = first_char
     if (character == "+"):
@@ -83,6 +88,7 @@ def is_simple(file, first_char):
     else:
         return "a", "a"   #What to do in case of no `.` at the end of the program 
 
+
 def clear_blank_char(file, character):
     global line_counter
     while(True):
@@ -94,11 +100,12 @@ def clear_blank_char(file, character):
         else:
             character = file.read(1)
 
+
 def is_comment(file, character):
     character = file.read(1)
-    while(character != "#"):
+    while (character != "#"):
         character = file.read(1)
-        if(not character):
+        if (not character):
             sys.exit("ERROR: '#' was not closed, line: " + str(line_counter))
     
 def lex(file, file_pointer):
@@ -117,10 +124,11 @@ def lex(file, file_pointer):
     elif first_char == ">" or first_char == "<":
         recognized_string, family = is_rel_operator(file, first_char)
     elif first_char == "#":
-        is_comment(file, first_char) # If there is a comment at the beginning lex() returns
-                                     # empty recognized_string and family
-    else:                             
+        is_comment(file, first_char) # If there is a comment at the beginning lex() returns empty recognized_string and family
+    elif first_char in group_symbol_list or first_char in delimeter_list:
         recognized_string, family = is_simple(file, first_char)
+    else:
+        sys.exit("ERROR: " + first_char + " do not belong at C-imple. line: " + str(line_counter))
 
     file_pointer = file.tell()
     file.seek(0)
