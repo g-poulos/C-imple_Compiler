@@ -1,6 +1,7 @@
-from distutils import command
 import sys
 
+from pyparsing import line
+ 
 line_counter = 1
 
 
@@ -14,9 +15,9 @@ class Token:
 def is_number(file, character):
     recognized_string = ""
     while(True):        
-        if(character.isnumeric()):
+        if (character.isnumeric()):
             recognized_string = recognized_string + character
-        elif(character.isalpha()):
+        elif (character.isalpha()):
             file.seek(file.tell()-1)
             sys.exit("ERROR: Expected number but found " + character + " at line " + str(line_counter))
         else:
@@ -83,9 +84,13 @@ def is_simple(file, first_char):
         return "a", "a"   #What to do in case of no `.` at the end of the program 
 
 def clear_blank_char(file, character):
+    global line_counter
     while(True):
         if(not character.isspace()):
             return character
+        elif (character == "\n"):
+            line_counter = line_counter + 1
+            character = file.read(1)
         else:
             character = file.read(1)
 
@@ -113,7 +118,8 @@ def lex(file, file_pointer):
         recognized_string, family = is_rel_operator(file, first_char)
     elif first_char == "#":
         is_comment(file, first_char) # If there is a comment at the beginning lex() returns
-    else:                            # empty recognized_string and family 
+                                     # empty recognized_string and family
+    else:                             
         recognized_string, family = is_simple(file, first_char)
 
     file_pointer = file.tell()
