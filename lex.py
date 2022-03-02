@@ -50,7 +50,6 @@ def is_keyword(file, first_char):
             recognized_string = recognized_string + character
 
 
-
 def is_assignment(file, first_char):
     recognized_string = ""
     first_character = first_char
@@ -88,7 +87,6 @@ def is_rel_operator(file, first_char):
 
 
 def is_simple(file, first_char):
-
     character = first_char
     if (character == "+" or character == "-"):
         return character, "addOperator"
@@ -99,13 +97,13 @@ def is_simple(file, first_char):
     elif (character in delimeter_list):
         return character, "delimeter"
     else:
-        return "a", "a"   #What to do in case of no `.` at the end of the program 
+        return "a", "a"  # What to do in case of no `.` at the end of the program
 
 
 def clear_blank_char(file, character):
     global line_counter
-    while(True):
-        if(not character.isspace()):
+    while (True):
+        if (not character.isspace()):
             return character
         elif (character == "\n"):
             line_counter = line_counter + 1
@@ -138,13 +136,14 @@ def lex(file, file_pointer):
     elif first_char == ">" or first_char == "<" or first_char == "=":
         recognized_string, family = is_rel_operator(file, first_char)
     elif first_char == "#":
-        is_comment(file, first_char) # If there is a comment at the beginning lex() returns empty recognized_string and family
-    elif first_char in group_symbol_list or first_char in delimeter_list or \
-         first_char in operator_list:
+        is_comment(file, first_char)  # If there is a comment at the beginning lex() returns empty recognized_string and family
+    elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
         recognized_string, family = is_simple(file, first_char)
     else:
-        sys.exit("ERROR: " + first_char + " does not belong at C-imple. line: " 
-                                                            + str(line_counter))
+        if first_char == "":
+            sys.exit()
+        else:
+            sys.exit("ERROR: " + first_char + " does not belong at C-imple. line: " + str(line_counter))
 
     file_pointer = file.tell()
     file.seek(0)
@@ -159,15 +158,14 @@ def main():
 
     current_pointer = 0
     next_pointer = -1
-    #expected_file = open("factorial_lex_expected", "r")
-    
-    with open(sys.argv[1], "r") as file: 
+    with open(sys.argv[1], "r") as file:
         while True:
             next_pointer, token = lex(file, current_pointer)
-            #print(current_pointer, next_pointer)
+            # print(current_pointer, next_pointer)
             if (next_pointer == current_pointer):
                 break
             current_pointer = next_pointer
+
 
 if __name__ == "__main__":
     main()
