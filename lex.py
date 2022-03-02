@@ -5,8 +5,10 @@ group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
 operator_list = ["+", "-", "*", "/"]
 
-group_keyword_list = ["print", "program", "if", "switchcase", "not", "function", "input", "declare", "else", "forcase",
-                      "and", "procedure", "while", "incase", "or", "call", "case", "default", "return", "in", "inout"]
+group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
+                      "input", "declare", "else", "forcase", "and", "procedure", 
+                      "while", "incase", "or", "call", "case", "default", 
+                      "return", "in", "inout"]
 
 
 class Token:
@@ -22,7 +24,8 @@ def is_number(file, character):
         if (character.isnumeric()):
             recognized_string = recognized_string + character
         elif (character.isalpha()):
-            sys.exit("ERROR: Expected number but found " + character + " at line " + str(line_counter))
+            sys.exit("ERROR: Expected number but found " + character + 
+                                        " at line " + str(line_counter))
         else:
             file.seek(file.tell() - 1)
             return recognized_string, "number"
@@ -41,7 +44,8 @@ def is_keyword(file, first_char):
                 else:
                     return recognized_string, "identifier"
             else:
-                sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(line_counter))
+                sys.exit("ERROR: Expected string has length greater than \
+                                allowed (30) at line " + str(line_counter))
         else:
             recognized_string = recognized_string + character
 
@@ -55,7 +59,8 @@ def is_assignment(file, first_char):
     if recognized_string == ":=":
         return recognized_string, "assignment"
     else:
-        sys.exit("ERROR: Expected := but found " + first_char + second_character + " at line " + str(line_counter))
+        sys.exit("ERROR: Expected := but found " + first_char + 
+                        second_character + " at line " + str(line_counter))
 
 
 def is_rel_operator(file, first_char):
@@ -134,10 +139,12 @@ def lex(file, file_pointer):
         recognized_string, family = is_rel_operator(file, first_char)
     elif first_char == "#":
         is_comment(file, first_char) # If there is a comment at the beginning lex() returns empty recognized_string and family
-    elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
+    elif first_char in group_symbol_list or first_char in delimeter_list or \
+         first_char in operator_list:
         recognized_string, family = is_simple(file, first_char)
     else:
-        sys.exit("ERROR: " + first_char + " does not belong at C-imple. line: " + str(line_counter))
+        sys.exit("ERROR: " + first_char + " does not belong at C-imple. line: " 
+                                                            + str(line_counter))
 
     file_pointer = file.tell()
     file.seek(0)
@@ -152,6 +159,8 @@ def main():
 
     current_pointer = 0
     next_pointer = -1
+    #expected_file = open("factorial_lex_expected", "r")
+    
     with open(sys.argv[1], "r") as file: 
         while True:
             next_pointer, token = lex(file, current_pointer)
