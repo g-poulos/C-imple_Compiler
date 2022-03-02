@@ -118,14 +118,23 @@ def is_comment(file, character):
         character = file.read(1)
         if (not character):
             sys.exit("ERROR: '#' was not closed, line: " + str(line_counter))
+    character = file.read(1)
+    return character
 
 
 def lex(file, file_pointer):
     file.seek(file_pointer)
     family = ""
     recognized_string = ""
+    
     first_char = file.read(1)
-    first_char = clear_blank_char(file, first_char)
+
+    # Clear comments and blank characters 
+    while first_char.isspace() or first_char == "#":
+        if first_char == "#":
+            first_char = is_comment(file, first_char) 
+        else:
+            first_char = clear_blank_char(file, first_char)
 
     if first_char.isnumeric():
         recognized_string, family = is_number(file, first_char)
@@ -135,8 +144,6 @@ def lex(file, file_pointer):
         recognized_string, family = is_assignment(file, first_char)
     elif first_char == ">" or first_char == "<" or first_char == "=":
         recognized_string, family = is_rel_operator(file, first_char)
-    elif first_char == "#":
-        is_comment(file, first_char)  # If there is a comment at the beginning lex() returns empty recognized_string and family
     elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
         recognized_string, family = is_simple(file, first_char)
     else:
