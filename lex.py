@@ -116,7 +116,7 @@ class Lex:
         elif (character in delimeter_list):
             return character, "delimeter"
         else:
-            return "a", "a"  # What to do in case of no `.` at the end of the program
+            return "a", "a"  # TODO What to do in case of no `.` at the end of the program
 
 
     def clear_blank_char(self, character):
@@ -173,7 +173,7 @@ class Lex:
 
         file_pointer = file.tell()
         file.seek(0)
-        print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
+        # print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
         return file_pointer, Token(recognized_string, family, self.current_line)
 
 class Parser:
@@ -183,11 +183,39 @@ class Parser:
     def __init__(self, lexical_analyzer):
         self.lexical_analyzer = lexical_analyzer
         
-    def get_token(self):
+    def __get_token(self):
         lex = self.lexical_analyzer
         self.file_pointer, token = lex.next_token(self.file_pointer) 
         return token
 
+    def syntax_analyzer(self):
+        global token
+        token = self.__get_token()
+        self.program()
+        # print("Compilation successfully completed")
+
+        # print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
+    
+    def program(self):
+        global token 
+
+        if token.recognized_string == "program": 
+            token = self.__get_token()
+            if token.family == "identifier":
+                token = self.__get_token()
+                # self.block() TODO block method
+                if token.recognized_string == ".":
+                    token = self.__get_token()
+                    if token.recognized_string == "eof": # TODO make lex return eof at end of file 
+                        token = self.__get_token()
+                    else:
+                        print()
+                else:
+                    print()
+            else:
+                print()
+        else:
+            print("keyword error")
 
 
 def main():
@@ -200,7 +228,7 @@ def main():
     parser_obj = Parser(lex_object)
 
     while True:
-        parser_obj.get_token()
+        parser_obj.syntax_analyzer()
 
 
 if __name__ == "__main__":
