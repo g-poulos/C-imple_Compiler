@@ -21,14 +21,20 @@ class Token:
 def is_number(file, character):
     recognized_string = ""
     while (True):
+        #print(recognized_string)
         if (character.isnumeric()):
             recognized_string = recognized_string + character
         elif (character.isalpha()):
             sys.exit("ERROR: Expected number but found " + character + 
                                         " at line " + str(line_counter))
         else:
-            file.seek(file.tell() - 1)
-            return recognized_string, "number"
+            if (int(recognized_string) >= -(pow(2, 32)-1) and 
+                int(recognized_string) <= (pow(2, 32)-1)):
+                    file.seek(file.tell()-1)
+                    return recognized_string, "number"
+            else:
+                sys.exit("ERROR: Constant exceeded bounds \n \
+                Value must be between -((2^32)-1) and (2^32)-1")
         character = file.read(1)
 
 
