@@ -20,6 +20,10 @@ class Token:
         self.family = family
         self.line_number = line_number
 
+    def __str__(self):
+        return self.recognized_string + ", family: \"" + \
+                self.family + "\", line: " + str(self.line_number)
+
 class Lex:
     file = NULL
 
@@ -165,9 +169,9 @@ class Lex:
         elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
             recognized_string, family = self.is_simple(first_char)
         else:
-            if first_char == "": # TODO Change termination method 
-                file.close()
-                sys.exit()
+            if first_char == "": 
+                recognized_string = "eof"
+                family = "eof"
             else:
                 sys.exit("ERROR: " + first_char + " does not belong to C-imple. line: " + str(self.current_line))
 
@@ -191,10 +195,13 @@ class Parser:
     def syntax_analyzer(self):
         global token
         token = self.__get_token()
-        self.program()
+        # self.program()
         # print("Compilation successfully completed")
 
-        # print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
+
+        # For testing only
+        print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
+        return token
     
     def program(self):
         global token 
@@ -228,7 +235,9 @@ def main():
     parser_obj = Parser(lex_object)
 
     while True:
-        parser_obj.syntax_analyzer()
+        token = parser_obj.syntax_analyzer()
+        if token.recognized_string == "eof":
+            break
 
 
 if __name__ == "__main__":
