@@ -47,7 +47,6 @@ class Lex:
             else:
                 if (int(recognized_string) >= -(pow(2, 32)-1) and 
                     int(recognized_string) <= (pow(2, 32)-1)):
-                        self.file.seek(self.file.tell()-1)
                         return recognized_string, "number"
                 else:
                     sys.exit("ERROR: Constant exceeded bounds \n \
@@ -61,7 +60,6 @@ class Lex:
             character = self.file.read(1)
             if not character.isnumeric() and not character.isalpha():
                 if len(recognized_string) <= 30:
-                    self.file.seek(self.file.tell() - 1)
                     if recognized_string in group_keyword_list:
                         return recognized_string, "keyword"
                     else:
@@ -195,7 +193,7 @@ class Parser:
     def syntax_analyzer(self):
         global token
         token = self.__get_token()
-        # self.program()
+        # self.__program()
         # print("Compilation successfully completed")
 
 
@@ -203,7 +201,13 @@ class Parser:
         print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
         return token
     
-    def program(self):
+    def __error(self, error_code):
+        if error_code == "KEYWORD PROGRAM NOT FOUND":
+            print("keyword 'program' expected in line"+ str(self.lexical_analyzer.current_line) +
+                    ". \n All programs should start with the keyword 'program'. Instead, \
+                    the word " + self.lexical_analyzer.recognized_string + "appeared")
+
+    def __program(self):
         global token 
 
         if token.recognized_string == "program": 
@@ -222,8 +226,31 @@ class Parser:
             else:
                 print()
         else:
-            print("keyword error")
+            self.__error("KEYWORD PROGRAM NOT FOUND")
 
+
+    def __block(self):
+        self.__declarations()
+
+
+    def __declarations(self):
+        pass 
+
+    def boolterm(self):
+        global token
+        self.__boolfactor()
+        while token.recognized_string == "and":
+            token = self.__get_token()
+            self.__boolfactor() 
+    
+    def __boolfactor(self):
+        # TODO
+        pass 
+    
+    def __reloperator(self):
+        rel_op_list = ["="]
+        if (True):
+            pass
 
 def main():
     if (len(sys.argv) != 2):
