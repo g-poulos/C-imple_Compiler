@@ -1,7 +1,4 @@
-from asyncio.windows_events import NULL
-from distutils.log import error
 import sys
-from turtle import goto
 
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
@@ -27,7 +24,7 @@ class Token:
                 self.family + "\", line: " + str(self.line_number)
 
 class Lex:
-    file = NULL
+    file = None
 
     def __init__(self, current_line, file_name, token):
         self.current_line = current_line
@@ -230,8 +227,10 @@ class Parser:
             print("SYNTAX ERROR: Expected id but got " + token.recognized_string + 
                     " at line: " + str(lex.current_line) + "\nAll id values should start " +
                     "with a letter and consist of letters and numbers")
-
-
+        elif error_code == "IDTAIL":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "FACTOR1":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
 
         sys.exit(1)
 
@@ -307,6 +306,27 @@ class Parser:
     def __forcaseStat():
         pass 
 
+    # ---------------------------------------------------
+
+    def __actualparlist(self):
+        global token 
+
+        if token.recognized_string == "in" or \
+            token.recognized_string == "inout":
+            self.__actualparitem
+            while token.recognized_string == ",":
+                token = self.__get_token()
+                self.__actualparitem
+
+    def __actualparitem(self):
+        global token   
+
+        if token.recognized_string == "in":
+            token = self.__get_token()
+            self.__expression()
+        elif token.recognized_string == "inout":
+            token = self.__get_token()
+            self.__idvalue()
 
 
     def boolterm(self):
@@ -320,7 +340,57 @@ class Parser:
         # TODO
         pass 
     
-    def optionalSign(self):
+    def __expression(self):
+        global token 
+
+        self.__optionalSign()
+        token = self.__get_token()
+        self.__term()
+        while token.recognized_string == "+" or \
+              token.recognized_string == "-":
+            self.__muloperator()
+            token = self.__get_token()
+            self.__term()
+
+    def __term(self):
+        global token 
+
+        self.__factor()
+        while token.recognized_string == "*" or \
+              token.recognized_string == "/": 
+            self.__muloperator()
+            token = self.__get_token()
+            self.__factor()
+
+    def __factor(self):
+        global token 
+
+        if token.recognized_string.isnumeric():
+            self.__integervalue()
+        elif token.recognized_string == "(":
+            token = self.__get_token()
+            self.__expression()
+            if not token.recognized_string == ")":
+                self.__error("FACTOR1")
+        elif token.recognized_string.isalpha():
+            self.__idvalue()
+            token = self.__get_token()
+            self.__idtail()
+        else:
+            self.__error("FACTOR2") # TODO maybe useless
+             
+    def __idtail(self):
+        global token 
+
+        if token.recognized_string == "(":
+            token = self.__get_token()
+            self.__actualparlist() #TODO
+            if not token.recognized_string == ")":
+                self.__error("IDTAIL")
+    
+    # ---------------------------------------------------
+
+    def __optionalSign(self):
         global token 
 
         if token.recognized_string == "+" or \
@@ -376,16 +446,24 @@ def main():
         # Temporary usage
         sys.exit("ERROR: Usage $ python lex.py <inputfile>")
 
-    token1 = Token("!", "xaxa", 0)
+    token1 = Token("()", "xaxa", 0)
     lex_object = Lex(1, sys.argv[1], token1)
     parser_obj = Parser(lex_object)
 
     # while True:
-    #     token = parser_obj.syntax_analyzer()
-    #     if token.recognized_string == "eof":
-    #         break
+    #     #token = parser_obj.syntax_analyzer()
+    #     print(token.__str__())
+    #     if input():
+    #parser_obj.idtail()
 
-    parser_obj.optionalSign()
+    # fp = 0
+    # while True:
+    #     fp, token = lex_object.next_token(fp)
+    #     print(token.__str__())
+    #     if token.recognized_string == "eof":
+    #          break
+        
+    # parser_obj.optionalSign()
 
 if __name__ == "__main__":
     main()
