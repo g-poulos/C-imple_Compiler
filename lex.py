@@ -1,16 +1,14 @@
-from asyncio.windows_events import NULL
-from distutils.log import error
 import sys
-from turtle import goto
 
+from keyring.backends import null
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
 operator_list = ["+", "-", "*", "/"]
 
 group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
-                      "input", "declare", "else", "forcase", "and", "procedure", 
-                      "while", "incase", "or", "call", "case", "default", 
+                      "input", "declare", "else", "forcase", "and", "procedure",
+                      "while", "incase", "or", "call", "case", "default",
                       "return", "in", "inout"]
 
 
@@ -26,49 +24,74 @@ class Token:
         return self.recognized_string + ", family: \"" + \
                 self.family + "\", line: " + str(self.line_number)
 
+
+
 class Lex:
-    file = NULL
+    bool = True
+    file = null
 
     def __init__(self, current_line, file_name, token):
         self.current_line = current_line
         self.file_name = file_name
-        self.token = token 
+        self.token = token
 
         self.file = open(self.file_name, "r")
 
 
+    def error(self,family,character):
+        if family == "number" and character.isalpha:
+            sys.exit("ERROR: Expected number but found " + character + " at line " + str(self.current_line))
+        elif family == "number":
+            sys.exit("ERROR: Constant exceeded bounds. Value must be between -((2^32)-1) and (2^32)-1 at line " + str(self.current_line))
+        elif family == "keyword":
+            sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(self.current_line))
+        elif family == "assignment":
+            sys.exit("ERROR: Expected := but found " + character + " at line " + str(self.current_line))
+        elif family == "comment":
+            sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
+        else:
+            sys.exit("ERROR: " + character + " does not belong to C-imple. line: " + str(self.current_line))
+
+
     def is_number(self, character):
+        global bool
         recognized_string = ""
         while (True):
             #print(recognized_string)
             if (character.isnumeric()):
                 recognized_string = recognized_string + character
             elif (character.isalpha()):
-                sys.exit("ERROR: Expected number but found " + character + 
-                                            " at line " + str(self.current_line))
+                self.error("number", character)
             else:
-                if (int(recognized_string) >= -(pow(2, 32)-1) and 
+                if (int(recognized_string) >= -(pow(2, 32)-1) and
                     int(recognized_string) <= (pow(2, 32)-1)):
-                        return recognized_string, "number"
+                    if character == "":
+                        bool = False
+                    self.file.seek(self.file.tell() - 1)
+                        #print(character)
+                    return recognized_string, "number"
                 else:
-                    sys.exit("ERROR: Constant exceeded bounds \n \
-                    Value must be between -((2^32)-1) and (2^32)-1")
+                    self.error("number", character)
             character = self.file.read(1)
 
 
     def is_keyword(self, first_char):
+        global bool
         recognized_string = first_char
         while True:
             character = self.file.read(1)
             if not character.isnumeric() and not character.isalpha():
                 if len(recognized_string) <= 30:
+                    if character == "":
+                        bool = False
+                    self.file.seek(self.file.tell() - 1)
+                    #print(character)
                     if recognized_string in group_keyword_list:
                         return recognized_string, "keyword"
                     else:
                         return recognized_string, "identifier"
                 else:
-                    sys.exit("ERROR: Expected string has length greater than \
-                                    allowed (30) at line " + str(self.current_line))
+                    self.error("keyword", character)
             else:
                 recognized_string = recognized_string + character
 
@@ -81,8 +104,8 @@ class Lex:
         if recognized_string == ":=":
             return recognized_string, "assignment"
         else:
-            sys.exit("ERROR: Expected := but found " + first_char + 
-                            second_character + " at line " + str(self.current_line))
+            character = first_character + second_character
+            self.error("assignment", character)
 
 
     def is_rel_operator(self, first_char):
@@ -139,7 +162,7 @@ class Lex:
         while (character != "#"):
             character = self.file.read(1)
             if (not character):
-                sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
+                self.error("comment", character)
         character = self.file.read(1)
         return character
 
@@ -148,15 +171,21 @@ class Lex:
         self.file.seek(file_pointer)
         family = ""
         recognized_string = ""
-        
+
+
         first_char = self.file.read(1)
         file = self.file
-        # Clear comments and blank characters 
+
+        # Clear comments and blank characters
         while first_char.isspace() or first_char == "#":
             if first_char == "#":
-                first_char = self.is_comment(first_char) 
+                first_char = self.is_comment(first_char)
             else:
                 first_char = self.clear_blank_char(first_char)
+
+        if bool == False:
+            first_char = "eof"
+            family = "eof"
 
         if first_char.isnumeric():
             recognized_string, family = self.is_number(first_char)
@@ -169,15 +198,16 @@ class Lex:
         elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
             recognized_string, family = self.is_simple(first_char)
         else:
-            if first_char == "": 
+            if first_char == "":
                 recognized_string = "eof"
                 family = "eof"
             else:
-                sys.exit("ERROR: " + first_char + " does not belong to C-imple. line: " + str(self.current_line))
+                self.error("", first_char)
 
         file_pointer = file.tell()
+        #print(file_pointer)
         file.seek(0)
-        # print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
+        #print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
         return file_pointer, Token(recognized_string, family, self.current_line)
 
 class Parser:
@@ -185,14 +215,14 @@ class Parser:
 
 
     def __init__(self, lexical_analyzer):
-        global token 
+        global token
         self.lexical_analyzer = lexical_analyzer
         token = lexical_analyzer.token
 
 
     def __get_token(self):
         lex = self.lexical_analyzer
-        self.file_pointer, token = lex.next_token(self.file_pointer) 
+        self.file_pointer, token = lex.next_token(self.file_pointer)
         return token
 
     def syntax_analyzer(self):
@@ -205,29 +235,29 @@ class Parser:
         # For testing only
         print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
         return token
-    
+
     def __error(self, error_code):
-        global token 
+        global token
         lex = self.lexical_analyzer
-        
+
         if error_code == "KEYWORD PROGRAM NOT FOUND":
             print("SYNTAX ERROR: keyword 'program' expected in line"+ str(lex.current_line) +
                     ". \n All programs should start with the keyword 'program'. Instead, \
                     the word " + token.recognized_string + "appeared")
         elif error_code == "EXPECTED REL_OP":
-            print("SYNTAX ERROR: Expected rel operator but got " + token.recognized_string + 
+            print("SYNTAX ERROR: Expected rel operator but got " + token.recognized_string +
                     " at line: " + str(lex.current_line))
         elif error_code == "EXPECTED ADD_OP":
-            print("SYNTAX ERROR: Expected add operator but got " + token.recognized_string + 
+            print("SYNTAX ERROR: Expected add operator but got " + token.recognized_string +
                     " at line: " + str(lex.current_line))
         elif error_code == "EXPECTED MUL_OP":
-            print("SYNTAX ERROR: Expected mul operator but got " + token.recognized_string + 
+            print("SYNTAX ERROR: Expected mul operator but got " + token.recognized_string +
                     " at line: " + str(lex.current_line))
         elif error_code == "NOT AN INTEGER":
-            print("SYNTAX ERROR: Expected integer but got " + token.recognized_string + 
+            print("SYNTAX ERROR: Expected integer but got " + token.recognized_string +
                     " at line: " + str(lex.current_line))
         elif error_code == "NOT ID":
-            print("SYNTAX ERROR: Expected id but got " + token.recognized_string + 
+            print("SYNTAX ERROR: Expected id but got " + token.recognized_string +
                     " at line: " + str(lex.current_line) + "\nAll id values should start " +
                     "with a letter and consist of letters and numbers")
 
@@ -236,16 +266,16 @@ class Parser:
         sys.exit(1)
 
     def __program(self):
-        global token 
+        global token
 
-        if token.recognized_string == "program": 
+        if token.recognized_string == "program":
             token = self.__get_token()
             if token.family == "identifier":
                 token = self.__get_token()
                 # self.block() TODO block method
                 if token.recognized_string == ".":
                     token = self.__get_token()
-                    if token.recognized_string == "eof": # TODO make lex return eof at end of file 
+                    if token.recognized_string == "eof": # TODO make lex return eof at end of file
                         token = self.__get_token()
                     else:
                         print()
@@ -262,50 +292,50 @@ class Parser:
 
 
     def __declarations(self):
-        pass 
-
-    
-    def __varlist():
         pass
 
-    def __subprograms():
+
+    def __varlist(self):
         pass
 
-    def __subprogram():
+    def __subprograms(self):
         pass
 
-    def __formalparlist():
+    def __subprogram(self):
         pass
 
-    def __formalparitem():
+    def __formalparlist(self):
         pass
 
-    def __statements():
+    def __formalparitem(self):
         pass
 
-    def __blockstatements():
+    def __statements(self):
         pass
 
-    def statement():
+    def __blockstatements(self):
         pass
 
-    def assignStat():
-        pass 
+    def statement(self):
+        pass
 
-    def ifStat():
-        pass 
+    def assignStat(self):
+        pass
 
-    def elsepart():
-        pass 
+    def ifStat(self):
+        pass
 
-    def __whileStat():
-        pass 
+    def elsepart(self):
+        pass
 
-    def __switchcaseStat():
-        pass 
+    def __whileStat(self):
+        pass
 
-    def __forcaseStat():
-        pass 
+    def __switchcaseStat(self):
+        pass
+
+    def __forcaseStat(self):
+        pass
 
 
 
@@ -314,21 +344,21 @@ class Parser:
         self.__boolfactor()
         while token.recognized_string == "and":
             token = self.__get_token()
-            self.__boolfactor() 
-    
+            self.__boolfactor()
+
     def __boolfactor(self):
         # TODO
-        pass 
-    
+        pass
+
     def optionalSign(self):
-        global token 
+        global token
 
         if token.recognized_string == "+" or \
             token.recognized_string == "-":
             self.__addoperator()
-  
+
     def __reloperator(self):
-        global token 
+        global token
 
         rel_op_list = ["=", "<=", ">=", ">", "<", "<>"]
         if not token.recognized_string in rel_op_list:
@@ -336,7 +366,7 @@ class Parser:
         token = self.__get_token()
 
     def __addoperator(self):
-        global token 
+        global token
 
         if not token.recognized_string == "+" and \
            not token.recognized_string == "-":
@@ -344,7 +374,7 @@ class Parser:
         token = self.__get_token()
 
     def __muloperator(self):
-        global token 
+        global token
 
         if not token.recognized_string == "*" and \
            not token.recognized_string == "/":
@@ -352,7 +382,7 @@ class Parser:
         token = self.__get_token()
 
     def __integervalue(self):
-        global token 
+        global token
 
         for i in range(len(token.recognized_string)):
             if not token.recognized_string[i].isnumeric():
@@ -360,7 +390,7 @@ class Parser:
         token = self.__get_token()
 
     def __idvalue(self):
-        global token 
+        global token
 
         if not token.recognized_string[0].isalpha():
             self.__error("NOT ID")
@@ -378,14 +408,16 @@ def main():
 
     token1 = Token("!", "xaxa", 0)
     lex_object = Lex(1, sys.argv[1], token1)
-    parser_obj = Parser(lex_object)
+    # parser_obj = Parser(lex_object)
+    fp = 0
 
-    # while True:
-    #     token = parser_obj.syntax_analyzer()
-    #     if token.recognized_string == "eof":
-    #         break
+    while True:
+        fp, token = lex_object.next_token(fp)
+        print(token.__str__())
+        if token.recognized_string == "eof":
+             break
 
-    parser_obj.optionalSign()
+    #parser_obj.optionalSign()
 
 if __name__ == "__main__":
     main()
