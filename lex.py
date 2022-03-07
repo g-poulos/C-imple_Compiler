@@ -320,8 +320,13 @@ class Parser:
         # TODO
         pass 
     
+    def optionalSign(self):
+        global token 
 
-    
+        if token.recognized_string == "+" or \
+            token.recognized_string == "-":
+            self.__addoperator()
+  
     def __reloperator(self):
         global token 
 
@@ -330,20 +335,18 @@ class Parser:
             self.__error("EXPECTED REL_OP")
         token = self.__get_token()
 
-
     def __addoperator(self):
         global token 
 
-        if not token.recognized_string == "+" or \
+        if not token.recognized_string == "+" and \
            not token.recognized_string == "-":
             self.__error("EXPECTED ADD_OP")
         token = self.__get_token()
 
-
     def __muloperator(self):
         global token 
 
-        if not token.recognized_string == "*" or \
+        if not token.recognized_string == "*" and \
            not token.recognized_string == "/":
             self.__error("EXPECTED MUL_OP")
         token = self.__get_token()
@@ -373,7 +376,7 @@ def main():
         # Temporary usage
         sys.exit("ERROR: Usage $ python lex.py <inputfile>")
 
-    token1 = Token("a325a32", "xaxa", 0)
+    token1 = Token("!", "xaxa", 0)
     lex_object = Lex(1, sys.argv[1], token1)
     parser_obj = Parser(lex_object)
 
@@ -382,7 +385,7 @@ def main():
     #     if token.recognized_string == "eof":
     #         break
 
-    parser_obj.idvalue()
+    parser_obj.optionalSign()
 
 if __name__ == "__main__":
     main()
