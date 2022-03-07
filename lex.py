@@ -183,8 +183,11 @@ class Parser:
 
 
     def __init__(self, lexical_analyzer):
+        global token 
         self.lexical_analyzer = lexical_analyzer
-        
+        token = lexical_analyzer.token
+
+
     def __get_token(self):
         lex = self.lexical_analyzer
         self.file_pointer, token = lex.next_token(self.file_pointer) 
@@ -202,10 +205,28 @@ class Parser:
         return token
     
     def __error(self, error_code):
+        global token 
+        lex = self.lexical_analyzer
+        
         if error_code == "KEYWORD PROGRAM NOT FOUND":
-            print("keyword 'program' expected in line"+ str(self.lexical_analyzer.current_line) +
+            print("SYNTAX ERROR: keyword 'program' expected in line"+ str(lex.current_line) +
                     ". \n All programs should start with the keyword 'program'. Instead, \
-                    the word " + self.lexical_analyzer.recognized_string + "appeared")
+                    the word " + token.recognized_string + "appeared")
+        elif error_code == "EXPECTED REL_OP":
+            print("SYNTAX ERROR: Expected rel operator but got " + token.recognized_string + 
+                    " at line: " + str(lex.current_line))
+        elif error_code == "EXPECTED ADD_OP":
+            print("SYNTAX ERROR: Expected add operator but got " + token.recognized_string + 
+                    " at line: " + str(lex.current_line))
+        elif error_code == "EXPECTED MUL_OP":
+            print("SYNTAX ERROR: Expected mul operator but got " + token.recognized_string + 
+                    " at line: " + str(lex.current_line))
+        elif error_code == "NOT AN INTEGER":
+            print("SYNTAX ERROR: Expected integer but got " + token.recognized_string + 
+                    " at line: " + str(lex.current_line))
+
+
+        sys.exit(1)
 
     def __program(self):
         global token 
@@ -236,6 +257,51 @@ class Parser:
     def __declarations(self):
         pass 
 
+    
+    def __varlist():
+        pass
+
+    def __subprograms():
+        pass
+
+    def __subprogram():
+        pass
+
+    def __formalparlist():
+        pass
+
+    def __formalparitem():
+        pass
+
+    def __statements():
+        pass
+
+    def __blockstatements():
+        pass
+
+    def statement():
+        pass
+
+    def assignStat():
+        pass 
+
+    def ifStat():
+        pass 
+
+    def elsepart():
+        pass 
+
+    def __whileStat():
+        pass 
+
+    def __switchcaseStat():
+        pass 
+
+    def __forcaseStat():
+        pass 
+
+
+
     def boolterm(self):
         global token
         self.__boolfactor()
@@ -247,25 +313,61 @@ class Parser:
         # TODO
         pass 
     
+
+    
     def __reloperator(self):
-        rel_op_list = ["="]
-        if (True):
-            pass
+        global token 
+
+        rel_op_list = ["=", "<=", ">=", ">", "<", "<>"]
+        if not token.recognized_string in rel_op_list:
+            self.__error("EXPECTED REL_OP")
+        token = self.__get_token()
+
+
+    def __addoperator(self):
+        global token 
+
+        if not token.recognized_string == "+" or \
+           not token.recognized_string == "-":
+            self.__error("EXPECTED ADD_OP")
+        token = self.__get_token()
+
+
+    def __muloperator(self):
+        global token 
+
+        if not token.recognized_string == "*" or \
+           not token.recognized_string == "/":
+            self.__error("EXPECTED MUL_OP")
+        token = self.__get_token()
+
+    def integervalue(self):
+        global token 
+
+        for i in range(len(token.recognized_string)):
+            if not token.recognized_string[i].isnumeric():
+                self.__error("NOT AN INTEGER")
+        token = self.__get_token()
+
+    def __idvalue(self):
+        pass
+
 
 def main():
     if (len(sys.argv) != 2):
         # Temporary usage
         sys.exit("ERROR: Usage $ python lex.py <inputfile>")
 
-    token1 = Token("Xaxa", "xaxa", 0)
+    token1 = Token("0", "xaxa", 0)
     lex_object = Lex(1, sys.argv[1], token1)
     parser_obj = Parser(lex_object)
 
-    while True:
-        token = parser_obj.syntax_analyzer()
-        if token.recognized_string == "eof":
-            break
+    # while True:
+    #     token = parser_obj.syntax_analyzer()
+    #     if token.recognized_string == "eof":
+    #         break
 
+    parser_obj.reloperator()
 
 if __name__ == "__main__":
     main()
