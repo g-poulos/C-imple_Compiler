@@ -1,5 +1,7 @@
 from asyncio.windows_events import NULL
+from distutils.log import error
 import sys
+from turtle import goto
 
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
@@ -224,6 +226,11 @@ class Parser:
         elif error_code == "NOT AN INTEGER":
             print("SYNTAX ERROR: Expected integer but got " + token.recognized_string + 
                     " at line: " + str(lex.current_line))
+        elif error_code == "NOT ID":
+            print("SYNTAX ERROR: Expected id but got " + token.recognized_string + 
+                    " at line: " + str(lex.current_line) + "\nAll id values should start " +
+                    "with a letter and consist of letters and numbers")
+
 
 
         sys.exit(1)
@@ -341,7 +348,7 @@ class Parser:
             self.__error("EXPECTED MUL_OP")
         token = self.__get_token()
 
-    def integervalue(self):
+    def __integervalue(self):
         global token 
 
         for i in range(len(token.recognized_string)):
@@ -350,7 +357,15 @@ class Parser:
         token = self.__get_token()
 
     def __idvalue(self):
-        pass
+        global token 
+
+        if not token.recognized_string[0].isalpha():
+            self.__error("NOT ID")
+        for i in range(1, len(token.recognized_string)-1):
+            if not token.recognized_string[i].isalpha() and \
+                not token.recognized_string[i].isnumeric():
+                self.__error("NOT ID")
+        token = self.__get_token()
 
 
 def main():
@@ -358,7 +373,7 @@ def main():
         # Temporary usage
         sys.exit("ERROR: Usage $ python lex.py <inputfile>")
 
-    token1 = Token("0", "xaxa", 0)
+    token1 = Token("a325a32", "xaxa", 0)
     lex_object = Lex(1, sys.argv[1], token1)
     parser_obj = Parser(lex_object)
 
@@ -367,7 +382,7 @@ def main():
     #     if token.recognized_string == "eof":
     #         break
 
-    parser_obj.reloperator()
+    parser_obj.idvalue()
 
 if __name__ == "__main__":
     main()
