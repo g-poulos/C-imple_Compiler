@@ -1,7 +1,5 @@
 import sys
 
-from keyring.backends import null
-
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
 operator_list = ["+", "-", "*", "/"]
@@ -28,7 +26,7 @@ class Token:
 
 class Lex:
     bool = True
-    file = null
+    file = None
 
     def __init__(self, current_line, file_name, token):
         self.current_line = current_line
@@ -230,7 +228,7 @@ class Parser:
         token = self.__get_token()
         # self.__program()
         # print("Compilation successfully completed")
-
+        self.test()
 
         # For testing only
         print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
@@ -343,24 +341,22 @@ class Parser:
 
     def __actualparlist(self):
         global token 
-
         if token.recognized_string == "in" or \
             token.recognized_string == "inout":
-            self.__actualparitem
+            self.__actualparitem()
+            
             while token.recognized_string == ",":
                 token = self.__get_token()
-                self.__actualparitem
+                self.__actualparitem()
 
     def __actualparitem(self):
         global token   
-
         if token.recognized_string == "in":
             token = self.__get_token()
             self.__expression()
         elif token.recognized_string == "inout":
             token = self.__get_token()
             self.__idvalue()
-
 
     def boolterm(self):
         global token
@@ -370,12 +366,15 @@ class Parser:
             self.__boolfactor()
 
     def __boolfactor(self):
-        # TODO
-        pass 
+        global token 
+        if token.recognized_string == "not":
+            token = self.__get_token()
+            if token.recognized_string == "[":
+                token = self.__get_token()
+                #self.__condition() TODO
     
     def __expression(self):
         global token 
-
         self.__optionalSign()
         token = self.__get_token()
         self.__term()
@@ -387,7 +386,6 @@ class Parser:
 
     def __term(self):
         global token 
-
         self.__factor()
         while token.recognized_string == "*" or \
               token.recognized_string == "/": 
@@ -397,7 +395,6 @@ class Parser:
 
     def __factor(self):
         global token 
-
         if token.recognized_string.isnumeric():
             self.__integervalue()
         elif token.recognized_string == "(":
@@ -409,30 +406,31 @@ class Parser:
             self.__idvalue()
             token = self.__get_token()
             self.__idtail()
-        else:
-            self.__error("FACTOR2") # TODO maybe useless
-             
+
+
     def __idtail(self):
         global token 
-
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__actualparlist() #TODO
+            print(token.__str__())
+            self.__actualparlist() 
+            
             if not token.recognized_string == ")":
                 self.__error("IDTAIL")
     
+    def test(self):
+        self.__idtail()
+
     # ---------------------------------------------------
 
     def __optionalSign(self):
         global token 
-
         if token.recognized_string == "+" or \
             token.recognized_string == "-":
             self.__addoperator()
 
     def __reloperator(self):
         global token
-
         rel_op_list = ["=", "<=", ">=", ">", "<", "<>"]
         if not token.recognized_string in rel_op_list:
             self.__error("EXPECTED REL_OP")
@@ -440,7 +438,6 @@ class Parser:
 
     def __addoperator(self):
         global token
-
         if not token.recognized_string == "+" and \
            not token.recognized_string == "-":
             self.__error("EXPECTED ADD_OP")
@@ -448,7 +445,6 @@ class Parser:
 
     def __muloperator(self):
         global token
-
         if not token.recognized_string == "*" and \
            not token.recognized_string == "/":
             self.__error("EXPECTED MUL_OP")
@@ -456,7 +452,6 @@ class Parser:
 
     def __integervalue(self):
         global token
-
         for i in range(len(token.recognized_string)):
             if not token.recognized_string[i].isnumeric():
                 self.__error("NOT AN INTEGER")
@@ -464,7 +459,6 @@ class Parser:
 
     def __idvalue(self):
         global token
-
         if not token.recognized_string[0].isalpha():
             self.__error("NOT ID")
         for i in range(1, len(token.recognized_string)-1):
@@ -479,16 +473,14 @@ def main():
         # Temporary usage
         sys.exit("ERROR: Usage $ python lex.py <inputfile>")
 
-    token1 = Token("()", "xaxa", 0)
-    lex_object = Lex(1, sys.argv[1], token1)
-    # parser_obj = Parser(lex_object)
-    fp = 0
+    token1 = Token("(xaxa, xaxax)", "xaxa", 0)
+    lex_object = Lex(1, sys.argv[1], None)
+    parser_obj = Parser(lex_object)
 
-    # while True:
-    #     #token = parser_obj.syntax_analyzer()
-    #     print(token.__str__())
-    #     if input():
-    #parser_obj.idtail()
+    while True:
+        parser_obj.syntax_analyzer()
+        if token.recognized_string == "eof":
+            break
 
     # fp = 0
     # while True:
@@ -497,7 +489,7 @@ def main():
     #     if token.recognized_string == "eof":
     #          break
         
-    # parser_obj.optionalSign()
+    #parser_obj.test()
 
 if __name__ == "__main__":
     main()
