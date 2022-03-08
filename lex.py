@@ -37,10 +37,10 @@ class Lex:
 
 
     def error(self,family,character):
-        if family == "number" and character.isalpha:
+        if family == "number" and character.isalpha():
             sys.exit("ERROR: Expected number but found " + character + " at line " + str(self.current_line))
         elif family == "number":
-            sys.exit("ERROR: Constant exceeded bounds. Value must be between -((2^32)-1) and (2^32)-1 at line " + str(self.current_line))
+            sys.exit("ERROR: Constant exceeded bounds. Value must be between -((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
         elif family == "keyword":
             sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(self.current_line))
         elif family == "assignment":

@@ -1,0 +1,6 @@
+program bounds
+{
+# declarations #
+declare x;
+x := 5555555555
+}.
