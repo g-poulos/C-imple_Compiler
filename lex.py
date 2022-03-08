@@ -205,7 +205,7 @@ class Lex:
         file_pointer = file.tell()
         #print(file_pointer)
         file.seek(0)
-        #print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
+        # print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
         return file_pointer, Token(recognized_string, family, self.current_line)
 
 class Parser:
@@ -226,12 +226,11 @@ class Parser:
     def syntax_analyzer(self):
         global token
         token = self.__get_token()
-        # self.__program()
-        # print("Compilation successfully completed")
-        self.test()
+        self.__program()
+        print("Compilation successfully completed")
 
         # For testing only
-        print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
+        # print(f"{token.recognized_string:12} family: {token.family:12} line: {token.line_number:3}")
         return token
 
     def __error(self, error_code):
@@ -272,13 +271,40 @@ class Parser:
             print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
         elif error_code == "incaseStat":
             print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "FORSTAT_)":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "FORSTAT_(":
+            print("SYNTAX ERROR: Expected '(' after 'case' at line: " + str(lex.current_line))
+        elif error_code == "FORSTAT_DEFAULT":
+            print("SYNTAX ERROR: Missing 'default' case at line: " + str(lex.current_line))
+        elif error_code == "SWITCHCASESTAT_)":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "SWITCHCASESTAT_(":
+            print("SYNTAX ERROR: Expected '(' after 'case' at line: " + str(lex.current_line))
+        elif error_code == "FORSTAT_DEFAULT":
+            print("SYNTAX ERROR: Missing 'default' case at line: " + str(lex.current_line))
+        elif error_code == "WHILESTAT_)":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "WHILESTAT_(":
+            print("SYNTAX ERROR: Expected '(' after 'while' at line: " + str(lex.current_line))
         elif error_code == "assignStat":
             print("SYNTAX ERROR: Expected ':=' at line: " + str(lex.current_line))
+        elif error_code == "IFSTAT_)":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "IFSTAT_(":
+            print("SYNTAX ERROR: Expected '(' after 'if' at line: " + str(lex.current_line)) 
+        elif error_code == "STATEMENTS_}":
+            print("SYNTAX ERROR: Expected '}' at line: " + str(lex.current_line) + 
+                    "\nMore than one statements should be grouped with brackets")
+        elif error_code == "STATEMENTS_;":
+            print("SYNTAX ERROR: Missing ';' of statement at line: " + str(lex.current_line))
+        elif error_code == "FORMALPARITEM_IN_INOUT":
+            print("SYNTAX ERROR: Missing 'in' or 'inout' of parameter at line: " + str(lex.current_line))
         elif error_code == "declaration":
             print("SYNTAX ERROR: Expected ';' at line: " + str(lex.current_line))
         elif error_code == "subprogram":
             print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
-
+        print(error_code)
         sys.exit(1)
 
     def __program(self):
@@ -288,30 +314,33 @@ class Parser:
             token = self.__get_token()
             if token.family == "identifier":
                 token = self.__get_token()
-                # self.block() TODO block method
+                self.__block()
                 if token.recognized_string == ".":
                     token = self.__get_token()
                     if token.recognized_string == "eof": # TODO make lex return eof at end of file
                         token = self.__get_token()
                     else:
-                        print()
+                        print("didnt found eof")
                 else:
-                    print()
+                    print(". not found")
             else:
-                print()
+                print("name") # TODO
         else:
             self.__error("KEYWORD PROGRAM NOT FOUND")
 
     def __block(self):
         global token 
         if token.recognized_string == "{":
+            token = self.__get_token()
             self.__declarations()
             self.__subprograms()
-            self.__blockstatements
-            if not token.recognized_string == "}":
-                self.__error("BLOCK_}") # TODO
+            self.__blockstatements()
+            if token.recognized_string == "}":
+                token = self.__get_token()
+            else:
+                self.__error("BLOCK_}") # TODO  
         else:
-            self.__error("BLOCK_}") # TODO
+            self.__error("BLOCK_{") # TODO
     
     def __declarations(self):
         global token
@@ -326,15 +355,15 @@ class Parser:
     def __varlist(self):
         global token
         if token.recognized_string.isalpha():
-            self.__actualparitem()
-
+            self.__idvalue()
             while token.recognized_string == ",":
                 token = self.__get_token()
                 self.__idvalue()
 
     def __subprograms(self):
         global token
-        while token.recognized_string == "subprogram":
+        while token.recognized_string == "function" or \
+                token.recognized_string == "procedure":
             token = self.__get_token()
             self.__subprogram()
 
@@ -354,7 +383,6 @@ class Parser:
 
             else:
                 self.__error("subprogram")
-
 
     def __formalparlist(self):
         global token 
@@ -382,18 +410,20 @@ class Parser:
             while token.recognized_string == ";":
                 token = self.__get_token()
                 self.__statement()
-            if not token.recognized_string == "}":
-                self.__error("STATEMENTS_}") # TODO
+            if token.recognized_string == "}":
+                token = self.__get_token()
+            else:
+                self.__error("STATEMENTS_}") 
         else:
             self.__statement()
-            token = self.__get_token()
             if not token.recognized_string == ";":
-                self.__error("STATEMENTS_;") # TODO
+                self.__error("STATEMENTS_;") 
         
     def __blockstatements(self):
         global token
-        self.__statement() # TODO
-        while token.recognized_string == ";":
+        self.__statement() 
+        
+        while token.recognized_string == ";":  
             token = self.__get_token()
             self.__statement()
 
@@ -407,22 +437,20 @@ class Parser:
                 token = self.__get_token()
                 self.__statements()
             else:
-                self.__error("IFSTAT_)") # TODO
+                self.__error("IFSTAT_)") 
             self.__elsepart()
         else:
-            self.__error("IFSTAT_(") # TODO
+            self.__error("IFSTAT_(")
         
     def __elsepart(self):
         global token
         if token.recognized_string == "else":
             token = self.__get_token()
-            self.__statements() # TODO
+            self.__statements() 
 
     def __statement(self):
         global token
-        if token.recognized_string.isalpha():
-            self.__assignStat()
-        elif token.recognized_string == "if":
+        if token.recognized_string == "if":
             self.__ifStat()
         elif token.recognized_string == "while":
             self.__whileStat()
@@ -440,6 +468,9 @@ class Parser:
             self.__inputStat()
         elif token.recognized_string == "print":
             self.__printStat()
+        elif token.recognized_string.isalpha() and \
+             not token.recognized_string in group_keyword_list:
+            self.__assignStat()
 
     def __assignStat(self):
         global token
@@ -453,55 +484,57 @@ class Parser:
     def __whileStat(self):
         global token 
         if token.recognized_string == "while":
+            token = self.__get_token()
             if token.recognized_string == "(":
                 token = self.__get_token()
                 self.__condition()
                 if token.recognized_string == ")":
                     token = self.__get_token()
-                    self.__statements() # TODO
+                    self.__statements() 
                 else:
-                    self.__error("WHILESTAT_)") # TODO
+                    self.__error("WHILESTAT_)") 
             else:
-                self.__error("WHILESTAT_(") # TODO
+                self.__error("WHILESTAT_(") 
 
     def __switchcaseStat(self):
         global token 
         if token.recognized_string == "switchcase":
+            token = self.__get_token()
             while token.recognized_string == "case":
                 if token.recognized_string == "(":
                     token = self.__get_token()
                     self.__condition()
                     if token.recognized_string == ")":
                         token = self.__get_token()
-                        self.__statements() # TODO
+                        self.__statements() 
                     else:
-                        self.__error("SWITCHCASESTAT_)") # TODO 
+                        self.__error("SWITCHCASESTAT_)")  
                 else:
-                    self.__error("SWITCHCASESTAT_(") # TODO 
+                    self.__error("SWITCHCASESTAT_(") 
             if token.recognized_string == "default":
                 token = self.__get_token()
-                self.__statements # TODO
+                self.__statements 
             else:
-                self.__error("SWITCHCASESTAT_DEFAULT") # TODO
-
+                self.__error("SWITCHCASESTAT_DEFAULT") 
 
     def __forcaseStat(self):
         global token 
         if token.recognized_string == "forcase":
+            token = self.__get_token()
             while token.recognized_string == "case":
                 token = self.__get_token()
                 if token.recognized_string == "(":
                     self.__condition()
                     if token.recognized_string == ")":
                         token = self.__get_token()
-                        self.__statements() # TODO
+                        self.__statements() 
                     else:
-                        self.__error("FORSTAT_)") # TODO
+                        self.__error("FORSTAT_)")
                 else:
-                    self.__error("FORSTAT_(") #TODO
+                    self.__error("FORSTAT_(")
             if token.recognized_string == "default":
                 token = self.__get_token()
-                self.__statements() # TODO
+                self.__statements() 
             else:
                 self.__error("FORSTAT_DEFAULT")
 
@@ -522,7 +555,6 @@ class Parser:
 
                 else:
                     self.__error("incaseStat")
-
 
     def __returnStat(self):
         global token
@@ -558,9 +590,9 @@ class Parser:
                 self.__expression()
                 if not token.recognized_string == ")":
                     self.__error("printStat")
+                token = self.__get_token()
             else:
                 self.__error("printStat")
-
 
     def __inputStat(self):
         global token
@@ -571,6 +603,7 @@ class Parser:
                 self.__idvalue()
                 if not token.recognized_string == ")":
                     self.__error("inputStat")
+                token = self.__get_token()
             else:
                 self.__error("inputStat")
 
@@ -580,13 +613,10 @@ class Parser:
 
     def __actualparlist(self):
         global token 
-        if token.recognized_string == "in" or \
-            token.recognized_string == "inout":
+        self.__actualparitem()
+        while token.recognized_string == ",":
+            token = self.__get_token()
             self.__actualparitem()
-            
-            while token.recognized_string == ",":
-                token = self.__get_token()
-                self.__actualparitem()
 
     def __actualparitem(self):
         global token   
@@ -629,20 +659,16 @@ class Parser:
                 self.__error("BOOLFACTOR_]") # TODO
         else:
             self.__expression()
-            token = self.__get_token()
             self.__reloperator()
-            token = self.__get_token()
             self.__expression()
 
     def __expression(self):
         global token 
         self.__optionalSign()
-        token = self.__get_token()
         self.__term()
         while token.recognized_string == "+" or \
               token.recognized_string == "-":
-            self.__muloperator()
-            token = self.__get_token()
+            self.__addoperator()
             self.__term()
 
     def __term(self):
@@ -665,9 +691,7 @@ class Parser:
                 self.__error("FACTOR1")
         elif token.recognized_string.isalpha():
             self.__idvalue()
-            token = self.__get_token()
             self.__idtail()
-
 
     def __idtail(self):
         global token 
@@ -675,7 +699,6 @@ class Parser:
             token = self.__get_token()
             print(token.__str__())
             self.__actualparlist() 
-            
             if not token.recognized_string == ")":
                 self.__error("IDTAIL")
     
@@ -722,6 +745,7 @@ class Parser:
         global token
         if not token.recognized_string[0].isalpha():
             self.__error("NOT ID")
+            
         for i in range(1, len(token.recognized_string)-1):
             if not token.recognized_string[i].isalpha() and \
                 not token.recognized_string[i].isnumeric():
@@ -738,19 +762,15 @@ def main():
     lex_object = Lex(1, sys.argv[1], None)
     parser_obj = Parser(lex_object)
 
-    while True:
-        parser_obj.syntax_analyzer()
-        if token.recognized_string == "eof":
-            break
+
+    parser_obj.syntax_analyzer()
 
     # fp = 0
     # while True:
     #     fp, token = lex_object.next_token(fp)
-    #     print(token.__str__())
     #     if token.recognized_string == "eof":
     #          break
         
-    #parser_obj.test()
 
 if __name__ == "__main__":
     main()
