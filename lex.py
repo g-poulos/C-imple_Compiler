@@ -205,7 +205,7 @@ class Lex:
         file_pointer = file.tell()
         #print(file_pointer)
         file.seek(0)
-        # print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
+        print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
         return file_pointer, Token(recognized_string, family, self.current_line)
 
 class Parser:
@@ -239,8 +239,8 @@ class Parser:
 
         if error_code == "KEYWORD PROGRAM NOT FOUND":
             print("SYNTAX ERROR: keyword 'program' expected in line"+ str(lex.current_line) +
-                    ". \n All programs should start with the keyword 'program'. Instead, \
-                    the word " + token.recognized_string + "appeared")
+                    ". \n All programs should start with the keyword 'program'. Instead, " +
+                    "the word '" + token.recognized_string + "' appeared")
         elif error_code == "EXPECTED REL_OP":
             print("SYNTAX ERROR: Expected rel operator but got " + token.recognized_string +
                     " at line: " + str(lex.current_line))
@@ -364,12 +364,12 @@ class Parser:
         global token
         while token.recognized_string == "function" or \
                 token.recognized_string == "procedure":
-            token = self.__get_token()
             self.__subprogram()
 
     def __subprogram(self):
         global token
-        if token.recognized_string == "function" or token.recognized_string == "procedure":
+        if token.recognized_string == "function" or \
+            token.recognized_string == "procedure":
             token = self.__get_token()
             self.__idvalue()
             if token.recognized_string == "(":
@@ -565,6 +565,7 @@ class Parser:
                 self.__expression()
                 if not token.recognized_string == ")":
                     self.__error("returnStat")
+                token = self.__get_token()
             else:
                 self.__error("returnStat")
 
@@ -578,6 +579,7 @@ class Parser:
                 self.__actualparlist()
                 if not token.recognized_string == ")":
                     self.__error("callStat")
+                token = self.__get_token()
             else:
                 self.__error("callStat")
 
@@ -697,11 +699,11 @@ class Parser:
         global token 
         if token.recognized_string == "(":
             token = self.__get_token()
-            print(token.__str__())
             self.__actualparlist() 
             if not token.recognized_string == ")":
                 self.__error("IDTAIL")
-    
+            token = self.__get_token()
+
     def test(self):
         self.__idtail()
 
