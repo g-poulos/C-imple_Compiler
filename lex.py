@@ -352,7 +352,7 @@ class Parser:
             self.__printStat()
 
 
-    def assignStat(self):
+    def __assignStat(self):
         global token
         self.__idvalue()
         if token.recognized_string == ":=":
@@ -362,10 +362,10 @@ class Parser:
             self.__error("assignStat")
 
 
-    def ifStat(self):
+    def __ifStat(self):
         pass
 
-    def elsepart(self):
+    def __elsepart(self):
         pass
 
     def __whileStat(self):
