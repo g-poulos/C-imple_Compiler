@@ -288,12 +288,23 @@ class Parser:
 
 
     def __block(self):
-        self.__declarations()
-
-
+        global token 
+        if token.recognized_string == "{":
+            self.__declarations()
+            self.__subprograms()
+            self.__blockstatements
+            if not token.recognized_string == "}":
+                self.__error("BLOCK_}") # TODO
+        else:
+            self.__error("BLOCK_}") # TODO
+    
     def __declarations(self):
-        pass
-
+        global token 
+        while token.recognized_string == "declare":
+            token = self.__get_token()
+            self.__varlist()
+            if not token.recognized_string == ";":
+                self.__error("DECLARATIONS_;") # TODO
 
     def __varlist(self):
         pass
@@ -305,37 +316,127 @@ class Parser:
         pass
 
     def __formalparlist(self):
-        pass
+        global token 
+        self.__formalparitem()
+        while token.recognized_string == ",":
+            self.__get_token()
+            self.__formalparitem()
 
     def __formalparitem(self):
-        pass
+        global token 
+        if token.recognized_string == "in":
+            token = self.__get_token()
+            self.__idvalue()
+        elif token.recognized_string == "inout":
+            token = self.__get_token()
+            self.__idvalue()
+        else:
+            self.__error("FORMALPARITEM_IN_INOUT") # TODO
 
     def __statements(self):
-        pass
-
+        global token 
+        if token.recognized_string == "{":
+            token = self.__get_token()
+            self.__statement()
+            while token.recognized_string == ";":
+                token = self.__get_token()
+                self.__statement()
+            if not token.recognized_string == "}":
+                self.__error("STATEMENTS_}") # TODO
+        else:
+            self.__statement()
+            token = self.__get_token()
+            if not token.recognized_string == ";":
+                self.__error("STATEMENTS_;") # TODO
+        
     def __blockstatements(self):
-        pass
+        global token
+        self.__statement() # TODO
+        while token.recognized_string == ";":
+            token = self.__get_token()
+            self.__statement()
 
-    def statement(self):
+    def __statement(self):
         pass
 
     def assignStat(self):
         pass
 
-    def ifStat(self):
-        pass
-
-    def elsepart(self):
-        pass
+    def __ifStat(self):
+        global token
+        token = self.__get_token()
+        if token.recognized_string == "(":
+            token = self.__get_token()
+            self.__condition()
+            if token.recognized_string == ")":
+                token = self.__get_token()
+                self.__statements()
+            else:
+                self.__error("IFSTAT_)") # TODO
+            self.__elsepart()
+        else:
+            self.__error("IFSTAT_(") # TODO
+        
+    def __elsepart(self):
+        global token
+        if token.recognized_string == "else":
+            token = self.__get_token()
+            self.__statements() # TODO
 
     def __whileStat(self):
-        pass
+        global token 
+        if token.recognized_string == "while":
+            if token.recognized_string == "(":
+                token = self.__get_token()
+                self.__condition()
+                if token.recognized_string == ")":
+                    token = self.__get_token()
+                    self.__statements() # TODO
+                else:
+                    self.__error("WHILESTAT_)") # TODO
+            else:
+                self.__error("WHILESTAT_(") # TODO
 
     def __switchcaseStat(self):
-        pass
+        global token 
+        if token.recognized_string == "switchcase":
+            while token.recognized_string == "case":
+                if token.recognized_string == "(":
+                    token = self.__get_token()
+                    self.__condition()
+                    if token.recognized_string == ")":
+                        token = self.__get_token()
+                        self.__statements() # TODO
+                    else:
+                        self.__error("SWITCHCASESTAT_)") # TODO 
+                else:
+                    self.__error("SWITCHCASESTAT_(") # TODO 
+            if token.recognized_string == "default":
+                token = self.__get_token()
+                self.__statements # TODO
+            else:
+                self.__error("SWITCHCASESTAT_DEFAULT") # TODO
+
 
     def __forcaseStat(self):
-        pass
+        global token 
+        if token.recognized_string == "forcase":
+            while token.recognized_string == "case":
+                token = self.__get_token()
+                if token.recognized_string == "(":
+                    self.__condition()
+                    if token.recognized_string == ")":
+                        token = self.__get_token()
+                        self.__statements() # TODO
+                    else:
+                        self.__error("FORSTAT_)") # TODO
+                else:
+                    self.__error("FORSTAT_(") #TODO
+            if token.recognized_string == "default":
+                token = self.__get_token()
+                self.__statements() # TODO
+            else:
+                self.__error("FORSTAT_DEFAULT")
 
     # ---------------------------------------------------
 
@@ -358,7 +459,14 @@ class Parser:
             token = self.__get_token()
             self.__idvalue()
 
-    def boolterm(self):
+    def __condition(self):
+        global token 
+        self.__boolterm()
+        while token.recognized_string == "or":
+            self.__get_token()
+            self.__boolfactor()
+
+    def __boolterm(self):
         global token
         self.__boolfactor()
         while token.recognized_string == "and":
@@ -371,8 +479,23 @@ class Parser:
             token = self.__get_token()
             if token.recognized_string == "[":
                 token = self.__get_token()
-                #self.__condition() TODO
-    
+                self.__condition() 
+                if not token.recognized_string == "]":
+                    self.__error("BOOLFACTOR_]") # TODO
+            else:
+                self.__error("BOOLFACTOR1_[")
+        elif token.recognized_string == "[":
+            token = self.__get_token()
+            self.__condition
+            if not token.recognized_string == "]":
+                self.__error("BOOLFACTOR_]") # TODO
+        else:
+            self.__expression()
+            token = self.__get_token()
+            self.__reloperator()
+            token = self.__get_token()
+            self.__expression()
+
     def __expression(self):
         global token 
         self.__optionalSign()
