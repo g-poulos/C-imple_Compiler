@@ -10,8 +10,6 @@ group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "return", "in", "inout"]
 
 
-
-
 class Token:
     def __init__(self, recognized_string, family, line_number):
         self.recognized_string = recognized_string
@@ -21,7 +19,6 @@ class Token:
     def __str__(self):
         return self.recognized_string + ", family: \"" + \
                 self.family + "\", line: " + str(self.line_number)
-
 
 
 class Lex:
@@ -35,21 +32,19 @@ class Lex:
 
         self.file = open(self.file_name, "r")
 
-
     def error(self,family,character):
         if family == "number" and character.isalpha():
-            sys.exit("ERROR: Expected number but found " + character + " at line " + str(self.current_line))
+            sys.exit("ERROR: Expected number but found " + character + " in line " + str(self.current_line))
         elif family == "number":
             sys.exit("ERROR: Constant exceeded bounds. Value must be between -((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
         elif family == "keyword":
-            sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(self.current_line))
+            sys.exit("ERROR: Expected string has length greater than allowed (30) in line " + str(self.current_line))
         elif family == "assignment":
-            sys.exit("ERROR: Expected := but found " + character + " at line " + str(self.current_line))
+            sys.exit("ERROR: Expected := but found " + character + " in line " + str(self.current_line))
         elif family == "comment":
             sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
         else:
-            sys.exit("ERROR: " + character + " does not belong to C-imple. line: " + str(self.current_line))
-
+            sys.exit("ERROR: in line " + str(self.current_line) + character + " does not belong to C-imple.")
 
     def is_number(self, character):
         global bool
@@ -238,72 +233,113 @@ class Parser:
         lex = self.lexical_analyzer
 
         if error_code == "KEYWORD PROGRAM NOT FOUND":
-            print("SYNTAX ERROR: keyword 'program' expected in line"+ str(lex.current_line) +
-                    ". \n All programs should start with the keyword 'program'. Instead, " +
-                    "the word '" + token.recognized_string + "' appeared")
+            print("SYNTAX ERROR: keyword 'program' expected in line " + str(lex.current_line) +
+                    ".\nAll programs should start with the keyword 'program'. Instead, " +
+                    "the word " + token.recognized_string + " appeared.")
+
         elif error_code == "EXPECTED REL_OP":
-            print("SYNTAX ERROR: Expected rel operator but got " + token.recognized_string +
-                    " at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected rel operator in line " + str(lex.current_line) + "but the word \n"
+                  + token.recognized_string + " appeared.")
+
         elif error_code == "EXPECTED ADD_OP":
-            print("SYNTAX ERROR: Expected add operator but got " + token.recognized_string +
-                    " at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected add operator in line " + str(lex.current_line) + "but the word \n"
+                  + token.recognized_string + " appeared.")
+
         elif error_code == "EXPECTED MUL_OP":
-            print("SYNTAX ERROR: Expected mul operator but got " + token.recognized_string +
-                    " at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected mul operator in line " + str(lex.current_line) + "but the word \n"
+                  + token.recognized_string + " appeared.")
+
         elif error_code == "NOT AN INTEGER":
-            print("SYNTAX ERROR: Expected integer but got " + token.recognized_string +
-                    " at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected integer in line " + str(lex.current_line) +
+                  "\nbut " + token.recognized_string + " appeared.")
+
         elif error_code == "NOT ID":
-            print("SYNTAX ERROR: Expected id but got " + token.recognized_string +
-                    " at line: " + str(lex.current_line) + "\nAll id values should start " +
-                    "with a letter and consist of letters and numbers")
+            print("SYNTAX ERROR: Expected id in line " + str(lex.current_line) +
+                  "\nbut " + token.recognized_string + " appeared." +
+                  "\nAll id values should start with a letter and consist of letters and numbers.")
+
         elif error_code == "IDTAIL":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+            " but " + token.recognized_string + " appeared.")
         elif error_code == "FACTOR1":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
         elif error_code == "inputStat":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
         elif error_code == "printStat":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
         elif error_code == "callStat":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
         elif error_code == "returnStat":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
         elif error_code == "incaseStat":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
         elif error_code == "FORSTAT_)":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "FORSTAT_(":
-            print("SYNTAX ERROR: Expected '(' after 'case' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected '(' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "FORSTAT_DEFAULT":
-            print("SYNTAX ERROR: Missing 'default' case at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Missing 'default' case in line: " + str(lex.current_line))
+
         elif error_code == "SWITCHCASESTAT_)":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "SWITCHCASESTAT_(":
-            print("SYNTAX ERROR: Expected '(' after 'case' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected '(' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "FORSTAT_DEFAULT":
-            print("SYNTAX ERROR: Missing 'default' case at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Missing 'default' case in line: " + str(lex.current_line))
+
         elif error_code == "WHILESTAT_)":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "WHILESTAT_(":
-            print("SYNTAX ERROR: Expected '(' after 'while' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected '(' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "assignStat":
-            print("SYNTAX ERROR: Expected ':=' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ':=' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "IFSTAT_)":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "IFSTAT_(":
-            print("SYNTAX ERROR: Expected '(' after 'if' at line: " + str(lex.current_line)) 
+            print("SYNTAX ERROR: Expected '(' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "STATEMENTS_}":
-            print("SYNTAX ERROR: Expected '}' at line: " + str(lex.current_line) + 
-                    "\nMore than one statements should be grouped with brackets")
+            print("SYNTAX ERROR: Expected '}' in line " + str(lex.current_line) +
+                    ".\nMore than one statements should be grouped with brackets.")
+
         elif error_code == "STATEMENTS_;":
-            print("SYNTAX ERROR: Missing ';' of statement at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "FORMALPARITEM_IN_INOUT":
-            print("SYNTAX ERROR: Missing 'in' or 'inout' of parameter at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Missing 'in' or 'inout' of parameter in line: " + str(lex.current_line))
+
         elif error_code == "declaration":
-            print("SYNTAX ERROR: Expected ';' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         elif error_code == "subprogram":
-            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+            print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
         print(error_code)
         sys.exit(1)
 
@@ -514,7 +550,7 @@ class Parser:
                     self.__error("SWITCHCASESTAT_(") 
             if token.recognized_string == "default":
                 token = self.__get_token()
-                self.__statements 
+                self.__statements()
             else:
                 self.__error("SWITCHCASESTAT_DEFAULT") 
 
@@ -659,7 +695,7 @@ class Parser:
                 self.__error("BOOLFACTOR1_[")
         elif token.recognized_string == "[":
             token = self.__get_token()
-            self.__condition
+            self.__condition()
             if not token.recognized_string == "]":
                 self.__error("BOOLFACTOR_]") # TODO
             token = self.__get_token()
