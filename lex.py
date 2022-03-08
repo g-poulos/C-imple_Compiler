@@ -274,6 +274,10 @@ class Parser:
             print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
         elif error_code == "assignStat":
             print("SYNTAX ERROR: Expected ':=' at line: " + str(lex.current_line))
+        elif error_code == "declaration":
+            print("SYNTAX ERROR: Expected ';' at line: " + str(lex.current_line))
+        elif error_code == "subprogram":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
 
         sys.exit(1)
 
@@ -304,17 +308,41 @@ class Parser:
 
 
     def __declarations(self):
-        pass
-
+        global token
+        while token.recognized_string == "declare":
+            token = self.__get_token()
+            self.__varlist()
+            if token.recognized_string == ";":
+                token = self.__get_token()
+            else:
+                self.__error("declaration")
 
     def __varlist(self):
         pass
 
     def __subprograms(self):
-        pass
+        global token
+        while token.recognized_string == "subprogram":
+            token = self.__get_token()
+            self.__subprogram()
 
     def __subprogram(self):
-        pass
+        global token
+        if token.recognized_string == "function" or token.recognized_string == "procedure":
+            token = self.__get_token()
+            self.__idvalue()
+            if token.recognized_string == "(":
+                token = self.__get_token()
+                self.__formalparlist()
+                if token.recognized_string == ")":
+                    token = self.__get_token()
+                    self.__block()
+                else:
+                    self.__error("subprogram")
+
+            else:
+                self.__error("subprogram")
+
 
     def __formalparlist(self):
         pass
