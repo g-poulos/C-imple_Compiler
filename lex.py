@@ -318,7 +318,13 @@ class Parser:
                 self.__error("declaration")
 
     def __varlist(self):
-        pass
+        global token
+        if token.recognized_string.isalpha():
+            self.__actualparitem()
+
+            while token.recognized_string == ",":
+                token = self.__get_token()
+                self.__idvalue()
 
     def __subprograms(self):
         global token
