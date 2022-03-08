@@ -262,6 +262,18 @@ class Parser:
             print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
         elif error_code == "FACTOR1":
             print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "inputStat":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "printStat":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "callStat":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "returnStat":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "incaseStat":
+            print("SYNTAX ERROR: Expected ')' at line: " + str(lex.current_line))
+        elif error_code == "assignStat":
+            print("SYNTAX ERROR: Expected ':=' at line: " + str(lex.current_line))
 
         sys.exit(1)
 
@@ -317,10 +329,38 @@ class Parser:
         pass
 
     def statement(self):
-        pass
+        global token
+        if token.recognized_string.isalpha():
+            self.__assignStat()
+        elif token.recognized_string == "if":
+            self.__ifStat()
+        elif token.recognized_string == "while":
+            self.__whileStat()
+        elif token.recognized_string == "switchcase":
+            self.__switchcaseStat()
+        elif token.recognized_string == "forcase":
+            self.__forcaseStat()
+        elif token.recognized_string == "incase":
+            self.__incaseStat()
+        elif token.recognized_string == "call":
+            self.__callStat()
+        elif token.recognized_string == "return":
+            self.__returnStat()
+        elif token.recognized_string == "input":
+            self.__inputStat()
+        elif token.recognized_string == "print":
+            self.__printStat()
+
 
     def assignStat(self):
-        pass
+        global token
+        self.__idvalue()
+        if token.recognized_string == ":=":
+            token = self.__get_token()
+            self.__expression()
+        else:
+            self.__error("assignStat")
+
 
     def ifStat(self):
         pass
@@ -337,7 +377,78 @@ class Parser:
     def __forcaseStat(self):
         pass
 
-    # ---------------------------------------------------
+    def __incaseStat(self):
+        global token
+        if token.recognized_string == "incase":
+            token = self.__get_token()
+            while token.recognized_string == "case":
+                token = self.__get_token()
+                if token.recognized_string == "(":
+                    token = self.__get_token()
+                    self.__condition()
+                    if token.recognized_string == ")":
+                        token = self.__get_token()
+                        self.__statements()
+                    else:
+                        self.__error("incaseStat")
+
+                else:
+                    self.__error("incaseStat")
+
+
+    def __returnStat(self):
+        global token
+        if token.recognized_string == "return":
+            token = self.__get_token()
+            if token.recognized_string == "(":
+                token = self.__get_token()
+                self.__expression()
+                if not token.recognized_string == ")":
+                    self.__error("returnStat")
+            else:
+                self.__error("returnStat")
+
+    def __callStat(self):
+        global token
+        if token.recognized_string == "call":
+            token = self.__get_token()
+            self.__idvalue()
+            if token.recognized_string == "(":
+                token = self.__get_token()
+                self.__actualparlist()
+                if not token.recognized_string == ")":
+                    self.__error("callStat")
+            else:
+                self.__error("callStat")
+
+    def __printStat(self):
+        global token
+        if token.recognized_string == "print":
+            token = self.__get_token()
+            if token.recognized_string == "(":
+                token = self.__get_token()
+                self.__expression()
+                if not token.recognized_string == ")":
+                    self.__error("printStat")
+            else:
+                self.__error("printStat")
+
+
+    def __inputStat(self):
+        global token
+        if token.recognized_string == "input":
+            token = self.__get_token()
+            if token.recognized_string == "(":
+                token = self.__get_token()
+                self.__idvalue()
+                if not token.recognized_string == ")":
+                    self.__error("inputStat")
+            else:
+                self.__error("inputStat")
+
+
+
+# --------------------------------------------------
 
     def __actualparlist(self):
         global token 
