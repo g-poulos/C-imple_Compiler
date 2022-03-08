@@ -1,3 +1,6 @@
+# Dimitropoulos Dimitrios, 4352, cse84352
+# Poulos Grigorios, 4480, cse84480
+
 import sys
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
@@ -36,44 +39,47 @@ class Lex:
         self.file = open(self.file_name, "r")
 
 
-    def error(self,family,character):
+    def __error(self,family,character):
         if family == "number" and character.isalpha():
-            sys.exit("ERROR: Expected number but found " + character + " at line " + str(self.current_line))
+            sys.exit("ERROR: Expected number but found " + character + " at line " 
+                        + str(self.current_line))
         elif family == "number":
-            sys.exit("ERROR: Constant exceeded bounds. Value must be between -((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
+            sys.exit("ERROR: Constant exceeded bounds. Value must be between " + 
+                        "-((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
         elif family == "keyword":
-            sys.exit("ERROR: Expected string has length greater than allowed (30) at line " + str(self.current_line))
+            sys.exit("ERROR: Expected string has length greater than allowed (30) at line "
+                         + str(self.current_line))
         elif family == "assignment":
-            sys.exit("ERROR: Expected := but found " + character + " at line " + str(self.current_line))
+            sys.exit("ERROR: Expected := but found " + character + " at line " 
+                        + str(self.current_line))
         elif family == "comment":
             sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
         else:
-            sys.exit("ERROR: " + character + " does not belong to C-imple. line: " + str(self.current_line))
+            sys.exit("ERROR: " + character + " does not belong to C-imple. line: " 
+                        + str(self.current_line))
 
 
-    def is_number(self, character):
+    def __is_number(self, character):
         global bool
         recognized_string = ""
         while (True):
-            #print(recognized_string)
             if (character.isnumeric()):
                 recognized_string = recognized_string + character
             elif (character.isalpha()):
-                self.error("number", character)
+                self.__error("number", character)
             else:
                 if (int(recognized_string) >= -(pow(2, 32)-1) and
                     int(recognized_string) <= (pow(2, 32)-1)):
                     if character == "":
                         bool = False
                     self.file.seek(self.file.tell() - 1)
-                        #print(character)
                     return recognized_string, "number"
                 else:
-                    self.error("number", character)
+                    self.__error("number", character)
             character = self.file.read(1)
 
 
-    def is_keyword(self, first_char):
+    def __is_keyword(self, first_char):
         global bool
         recognized_string = first_char
         while True:
@@ -89,12 +95,12 @@ class Lex:
                     else:
                         return recognized_string, "identifier"
                 else:
-                    self.error("keyword", character)
+                    self.__error("keyword", character)
             else:
                 recognized_string = recognized_string + character
 
 
-    def is_assignment(self, first_char):
+    def __is_assignment(self, first_char):
         recognized_string = ""
         first_character = first_char
         second_character = self.file.read(1)
@@ -103,10 +109,10 @@ class Lex:
             return recognized_string, "assignment"
         else:
             character = first_character + second_character
-            self.error("assignment", character)
+            self.__error("assignment", character)
 
 
-    def is_rel_operator(self, first_char):
+    def __is_rel_operator(self, first_char):
         recognized_string = ""
         character = first_char
         while True:
@@ -130,7 +136,7 @@ class Lex:
                     return character, "relOperator"
 
 
-    def is_simple(self, first_char):
+    def __is_single_char(self, first_char):
         character = first_char
         if (character == "+" or character == "-"):
             return character, "addOperator"
@@ -140,11 +146,9 @@ class Lex:
             return character, "groupSymbol"
         elif (character in delimeter_list):
             return character, "delimeter"
-        else:
-            return "a", "a"  # TODO What to do in case of no `.` at the end of the program
 
 
-    def clear_blank_char(self, character):
+    def __clear_blank_char(self, character):
         while (True):
             if (not character.isspace()):
                 return character
@@ -155,12 +159,12 @@ class Lex:
                 character = self.file.read(1)
 
 
-    def is_comment(self, character):
+    def __is_comment(self, character):
         character = self.file.read(1)
         while (character != "#"):
             character = self.file.read(1)
             if (not character):
-                self.error("comment", character)
+                self.__error("comment", character)
         character = self.file.read(1)
         return character
 
@@ -177,30 +181,30 @@ class Lex:
         # Clear comments and blank characters
         while first_char.isspace() or first_char == "#":
             if first_char == "#":
-                first_char = self.is_comment(first_char)
+                first_char = self.__is_comment(first_char)
             else:
-                first_char = self.clear_blank_char(first_char)
+                first_char = self.__clear_blank_char(first_char)
 
         if bool == False:
             first_char = "eof"
             family = "eof"
 
         if first_char.isnumeric():
-            recognized_string, family = self.is_number(first_char)
+            recognized_string, family = self.__is_number(first_char)
         elif first_char.isalpha():
-            recognized_string, family = self.is_keyword(first_char)
+            recognized_string, family = self.__is_keyword(first_char)
         elif first_char == ":":
-            recognized_string, family = self.is_assignment(first_char)
+            recognized_string, family = self.__is_assignment(first_char)
         elif first_char == ">" or first_char == "<" or first_char == "=":
-            recognized_string, family = self.is_rel_operator(first_char)
+            recognized_string, family = self.__is_rel_operator(first_char)
         elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
-            recognized_string, family = self.is_simple(first_char)
+            recognized_string, family = self.__is_single_char(first_char)
         else:
             if first_char == "":
                 recognized_string = "eof"
                 family = "eof"
             else:
-                self.error("", first_char)
+                self.__error("", first_char)
 
         file_pointer = file.tell()
         #print(file_pointer)
