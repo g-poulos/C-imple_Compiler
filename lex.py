@@ -388,7 +388,7 @@ class Parser:
         global token 
         self.__formalparitem()
         while token.recognized_string == ",":
-            self.__get_token()
+            token = self.__get_token()
             self.__formalparitem()
 
     def __formalparitem(self):
@@ -418,6 +418,7 @@ class Parser:
             self.__statement()
             if not token.recognized_string == ";":
                 self.__error("STATEMENTS_;") 
+            token = self.__get_token()
         
     def __blockstatements(self):
         global token
@@ -524,6 +525,7 @@ class Parser:
             while token.recognized_string == "case":
                 token = self.__get_token()
                 if token.recognized_string == "(":
+                    token = self.__get_token()
                     self.__condition()
                     if token.recognized_string == ")":
                         token = self.__get_token()
@@ -652,6 +654,7 @@ class Parser:
                 self.__condition() 
                 if not token.recognized_string == "]":
                     self.__error("BOOLFACTOR_]") # TODO
+                token = self.__get_token()
             else:
                 self.__error("BOOLFACTOR1_[")
         elif token.recognized_string == "[":
@@ -659,6 +662,7 @@ class Parser:
             self.__condition
             if not token.recognized_string == "]":
                 self.__error("BOOLFACTOR_]") # TODO
+            token = self.__get_token()
         else:
             self.__expression()
             self.__reloperator()
@@ -679,7 +683,6 @@ class Parser:
         while token.recognized_string == "*" or \
               token.recognized_string == "/": 
             self.__muloperator()
-            token = self.__get_token()
             self.__factor()
 
     def __factor(self):
@@ -691,6 +694,7 @@ class Parser:
             self.__expression()
             if not token.recognized_string == ")":
                 self.__error("FACTOR1")
+            token = self.__get_token()
         elif token.recognized_string.isalpha():
             self.__idvalue()
             self.__idtail()
