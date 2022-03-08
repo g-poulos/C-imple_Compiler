@@ -1,0 +1,6 @@
+program not_in_cimple_alphabet
+{
+# declarations #
+declare x;
+x := 1
+}.

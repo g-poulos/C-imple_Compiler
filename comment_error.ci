@@ -1,0 +1,4 @@
+program comment
+{
+# comment not closed
+}.
