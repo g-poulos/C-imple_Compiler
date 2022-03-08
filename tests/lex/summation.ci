@@ -1,0 +1,15 @@
+program summation
+{
+declare x,sum;
+# main #
+input(x);
+sum :=0;
+forcase
+case(x>0)
+{
+sum := sum+x;
+x := x-1
+}
+default
+print(sum);
+}.
