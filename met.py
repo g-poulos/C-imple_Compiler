@@ -204,7 +204,7 @@ class Lex:
         file_pointer = file.tell()
         # print(file_pointer)
         file.seek(0)
-        print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
+        # print(f"{recognized_string:12} family: {family:12} line: {self.current_line:3}")
         return file_pointer, Token(recognized_string, family, self.current_line)
 
 
@@ -764,8 +764,9 @@ class Parser:
 
 def main():
     if (len(sys.argv) != 2):
-        # Temporary usage
         sys.exit("ERROR: Usage $python met.py <inputfile>")
+    if (sys.argv[1].split(".")[2] != "ci"):
+        sys.exit("ERROR: Compiler accepts only '.ci' files")
 
     token1 = Token(None, None, 1)
     lex_object = Lex(1, sys.argv[1], None)
