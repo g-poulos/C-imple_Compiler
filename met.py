@@ -236,7 +236,7 @@ class Parser:
         error_codes = ["IDTAIL", "FACTOR1", "inputStat", "printStat", "callStat", "returnStat",
                         "incaseStat", "FORSTAT_)", "SWITCHCASESTAT_)", "WHILESTAT_)", "IFSTAT_)", "subprogram"]
 
-        errors =["FORSTAT_(", "SWITCHCASESTAT_(", "WHILESTAT_(", "IFSTAT_("]
+        case_stat =["FORSTAT_(", "SWITCHCASESTAT_("]
 
         global token
         lex = self.lexical_analyzer
@@ -278,8 +278,16 @@ class Parser:
             print("SYNTAX ERROR: Expected ')' in line " + str(lex.current_line) +
                   " but " + token.recognized_string + " appeared.")
 
-        elif error_code in errors:
-            print("SYNTAX ERROR: Expected '(' in line " + str(lex.current_line) +
+        elif error_code in case_stat:
+            print("SYNTAX ERROR: Expected '(' after 'case' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
+        elif error_code == "WHILESTAT_(":
+            print("SYNTAX ERROR: Expected '(' after 'while' in line " + str(lex.current_line) +
+                  " but " + token.recognized_string + " appeared.")
+
+        elif error_code == "IFSTAT_(":
+            print("SYNTAX ERROR: Expected '(' after 'if' in line " + str(lex.current_line) +
                   " but " + token.recognized_string + " appeared.")
 
         elif error_code == "STATEMENTS_}":
