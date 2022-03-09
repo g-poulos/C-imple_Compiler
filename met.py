@@ -233,10 +233,10 @@ class Parser:
 
     def __error(self, error_code):
 
-        error_codes = ["IDTAIL","FACTOR1","inputStat","printStat","callStat","returnStat",
-                        "incaseStat","FORSTAT_)","SWITCHCASESTAT_)","WHILESTAT_)","IFSTAT_)","subprogram"]
+        error_codes = ["IDTAIL", "FACTOR1", "inputStat", "printStat", "callStat", "returnStat",
+                        "incaseStat", "FORSTAT_)", "SWITCHCASESTAT_)", "WHILESTAT_)", "IFSTAT_)", "subprogram"]
 
-        errors =["FORSTAT_(","SWITCHCASESTAT_(","WHILESTAT_(","IFSTAT_("]
+        errors =["FORSTAT_(", "SWITCHCASESTAT_(", "WHILESTAT_(", "IFSTAT_("]
 
         global token
         lex = self.lexical_analyzer
@@ -297,6 +297,27 @@ class Parser:
             print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
                   " but " + token.recognized_string + " appeared.")
 
+        elif error_code == "NO_EOF":
+            print("SYNTAX ERROR: No characters are allowed after the fullstop indicating the end of the program.")
+        
+        elif error_code == "NO_DOT":
+            print("SYNTAX ERROR: Every program should end with a fullstop, fullstop at the end is missing.")
+        
+        elif error_code == "PROGRAM_NAME":
+            print("SYNTAX ERROR: The name of the program expected after the keyword “program” in line" + 
+                    str(lex.current_line) + " . The illegal program name" + token.recognized_string + " appeared.")
+        
+        elif error_code == "BLOCK_}":
+            print("SYNTAX ERROR: Expected '}' at the end of the block in line: " + str(lex.current_line))
+
+        elif error_code == "BLOCK_{":
+            print("SYNTAX ERROR: Expected '{' at the beginning of the block in line: " + str(lex.current_line))
+
+        elif error_code == "BOOLFACTOR_]":
+            print("SYNTAX ERROR: Expected ']' at the end of boolean expression in line: " + str(lex.current_line))
+
+        elif error_code == "BOOLFACTOR_[":
+            print("SYNTAX ERROR: Expected '[' at the beginning of boolean expression in line: " + str(lex.current_line))
 
         sys.exit(1)
 
@@ -310,14 +331,14 @@ class Parser:
                 self.__block()
                 if token.recognized_string == ".":
                     token = self.__get_token()
-                    if token.recognized_string == "eof":  # TODO make lex return eof at end of file
+                    if token.recognized_string == "eof": 
                         token = self.__get_token()
                     else:
-                        print("didnt found eof")
+                        self.__error("NO_EOF")
                 else:
-                    print(". not found")
+                    self.__error("NO_DOT")
             else:
-                print("name")  # TODO
+                self.__error("PROGRAM_NAME")  
         else:
             self.__error("KEYWORD PROGRAM NOT FOUND")
 
@@ -331,9 +352,9 @@ class Parser:
             if token.recognized_string == "}":
                 token = self.__get_token()
             else:
-                self.__error("BLOCK_}")  # TODO
+                self.__error("BLOCK_}")  
         else:
-            self.__error("BLOCK_{")  # TODO
+            self.__error("BLOCK_{")  
 
     def __declarations(self):
         global token
@@ -393,7 +414,7 @@ class Parser:
             token = self.__get_token()
             self.__idvalue()
         else:
-            self.__error("FORMALPARITEM_IN_INOUT")  # TODO
+            self.__error("FORMALPARITEM_IN_INOUT")  
 
     def __statements(self):
         global token
@@ -643,15 +664,15 @@ class Parser:
                 token = self.__get_token()
                 self.__condition()
                 if not token.recognized_string == "]":
-                    self.__error("BOOLFACTOR_]")  # TODO
+                    self.__error("BOOLFACTOR_]")  
                 token = self.__get_token()
             else:
-                self.__error("BOOLFACTOR1_[")
+                self.__error("BOOLFACTOR_[")
         elif token.recognized_string == "[":
             token = self.__get_token()
             self.__condition()
             if not token.recognized_string == "]":
-                self.__error("BOOLFACTOR_]")  # TODO
+                self.__error("BOOLFACTOR_]") 
             token = self.__get_token()
         else:
             self.__expression()
