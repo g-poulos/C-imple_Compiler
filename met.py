@@ -38,21 +38,21 @@ class Lex:
 
     def __error(self,family,character):
         if family == "number" and character.isalpha():
-            sys.exit("ERROR: Expected number but found " + character + " at line " 
+            sys.exit("ERROR: Expected number but found " + character + " in line " 
                         + str(self.current_line))
         elif family == "number":
             sys.exit("ERROR: Constant exceeded bounds. Value must be between " + 
                         "-((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
         elif family == "keyword":
-            sys.exit("ERROR: Expected string has length greater than allowed (30) at line "
+            sys.exit("ERROR: Expected string has length greater than allowed (30) in line "
                          + str(self.current_line))
         elif family == "assignment":
-            sys.exit("ERROR: Expected := but found " + character + " at line " 
+            sys.exit("ERROR: Expected := but found '" + character + "' in line " 
                         + str(self.current_line))
         elif family == "comment":
             sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
         else:
-            sys.exit("ERROR: " + character + " does not belong to C-imple. line: " 
+            sys.exit("ERROR: '" + character + "' does not belong to C-imple. line: " 
                         + str(self.current_line))
 
 
@@ -306,12 +306,12 @@ class Parser:
 
         elif error_code == "NO_EOF":
             print("SYNTAX ERROR: No characters are allowed after the fullstop indicating the end of the program.")
-        
+
         elif error_code == "NO_DOT":
             print("SYNTAX ERROR: Every program should end with a fullstop, fullstop at the end is missing.")
         
         elif error_code == "PROGRAM_NAME":
-            print("SYNTAX ERROR: The name of the program expected after the keyword “program” in line" + 
+            print("SYNTAX ERROR: The name of the program expected after the keyword 'program' in line" + 
                     str(lex.current_line) + " . The illegal program name '" + token.recognized_string + "' appeared.")
         
         elif error_code == "BLOCK_}":
@@ -765,8 +765,10 @@ class Parser:
 def main():
     if (len(sys.argv) != 2):
         sys.exit("ERROR: Usage $python met.py <inputfile>")
-    if (sys.argv[1].split(".")[2] != "ci"):
-        sys.exit("ERROR: Compiler accepts only '.ci' files")
+    
+    print(sys.argv[1].split("."))
+    #if (sys.argv[1].split(".")[2] != "ci"):
+    #    sys.exit("ERROR: Compiler accepts only '.ci' files")
 
     token1 = Token(None, None, 1)
     lex_object = Lex(1, sys.argv[1], None)
