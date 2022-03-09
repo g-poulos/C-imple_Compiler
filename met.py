@@ -244,7 +244,7 @@ class Parser:
         if error_code == "KEYWORD PROGRAM NOT FOUND":
             print("SYNTAX ERROR: keyword 'program' expected in line " + str(lex.current_line) +
                   ".\nAll programs should start with the keyword 'program'.Instead, " +
-                  "the word " + token.recognized_string + " appeared.")
+                  "the word '" + token.recognized_string + "' appeared.")
 
         elif error_code == "EXPECTED REL_OP":
             print("SYNTAX ERROR: Expected rel operator in line " + str(lex.current_line) + "\n" + " '"
@@ -288,14 +288,13 @@ class Parser:
 
         elif error_code == "STATEMENTS_;":
             print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
-                  " but " + token.recognized_string + " appeared.")
-
-        elif error_code == "FORMALPARITEM_IN_INOUT":
-            print("SYNTAX ERROR: Missing 'in' or 'inout' of parameter in line: " + str(lex.current_line))
+                  " but " + token.recognized_string + " appeared." + 
+                  "\nAll statements should end with a ';'")
 
         elif error_code == "declaration":
             print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
-                  " but " + token.recognized_string + " appeared.")
+                  " but " + token.recognized_string + " appeared." + 
+                  "\nAll declarations should end with a ';'")
 
         elif error_code == "NO_EOF":
             print("SYNTAX ERROR: No characters are allowed after the fullstop indicating the end of the program.")
@@ -305,7 +304,7 @@ class Parser:
         
         elif error_code == "PROGRAM_NAME":
             print("SYNTAX ERROR: The name of the program expected after the keyword “program” in line" + 
-                    str(lex.current_line) + " . The illegal program name" + token.recognized_string + " appeared.")
+                    str(lex.current_line) + " . The illegal program name '" + token.recognized_string + "' appeared.")
         
         elif error_code == "BLOCK_}":
             print("SYNTAX ERROR: Expected '}' at the end of the block in line: " + str(lex.current_line))
@@ -368,7 +367,7 @@ class Parser:
 
     def __varlist(self):
         global token
-        if token.recognized_string.isalpha():
+        if token.recognized_string[0].isalpha():
             self.__idvalue()
             while token.recognized_string == ",":
                 token = self.__get_token()
@@ -413,8 +412,6 @@ class Parser:
         elif token.recognized_string == "inout":
             token = self.__get_token()
             self.__idvalue()
-        else:
-            self.__error("FORMALPARITEM_IN_INOUT")  
 
     def __statements(self):
         global token
@@ -483,8 +480,9 @@ class Parser:
             self.__inputStat()
         elif token.recognized_string == "print":
             self.__printStat()
-        elif token.recognized_string.isalpha() and \
-                not token.recognized_string in group_keyword_list:
+        elif token.recognized_string[0].isalpha() and \
+             token.recognized_string != "eof" and \
+             not token.recognized_string in group_keyword_list:
             self.__assignStat()
 
     def __assignStat(self):
@@ -625,7 +623,6 @@ class Parser:
             else:
                 self.__error("inputStat")
 
-
     def __actualparlist(self):
         global token
         self.__actualparitem()
@@ -706,7 +703,7 @@ class Parser:
             if not token.recognized_string == ")":
                 self.__error("FACTOR1")
             token = self.__get_token()
-        elif token.recognized_string.isalpha():
+        elif token.recognized_string[0].isalpha():
             self.__idvalue()
             self.__idtail()
 
