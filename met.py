@@ -12,6 +12,8 @@ group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "while", "incase", "or", "call", "case", "default",
                       "return", "in", "inout"]
 
+quad_number = 0
+
 
 class Token:
     def __init__(self, recognized_string, family, line_number):
@@ -762,6 +764,28 @@ class Parser:
         token = self.__get_token()
 
 
+class Quad:
+    def __init__(self, quad_label, operator, operand1, operand2, operand3):
+        self.quad_label = quad_label
+        self.operator = operator
+        self.operand1 = operand1
+        self.operand2 = operand2
+        self.operand3 = operand3
+
+    def __str__(self):
+        return str(self.quad_label) + ": " + str(self.operator) + ", " \
+               + str(self.operand1) + ", " + str(self.operand2) + ", " + str(self.operand3)
+
+
+def gen_quad(operator, operand1, operand2, operand3):
+    return Quad(next_quad(), operator, operand1, operand2, operand3)
+
+
+def next_quad():
+    global quad_number
+    return quad_number + 1
+
+
 def main():
     if (len(sys.argv) != 2):
         sys.exit("ERROR: Usage $python met.py <inputfile>")
@@ -770,17 +794,21 @@ def main():
     #if (sys.argv[1].split(".")[2] != "ci"):
     #    sys.exit("ERROR: Compiler accepts only '.ci' files")
 
-    token1 = Token(None, None, 1)
-    lex_object = Lex(1, sys.argv[1], None)
-    parser_obj = Parser(lex_object)
-
-    parser_obj.syntax_analyzer()
+    # ------------------------------- Phase 1 main
+    # token1 = Token(None, None, 1)
+    # lex_object = Lex(1, sys.argv[1], None)
+    # parser_obj = Parser(lex_object)
+    #
+    # parser_obj.syntax_analyzer()
+    # -------------------------------
 
     # fp = 0
     # while True:
     #     fp, token = lex_object.next_token(fp)
     #     if token.recognized_string == "eof":
     #          break
+
+    print(gen_quad("+", "_", "_", "_").__str__())
 
 
 if __name__ == "__main__":
