@@ -13,7 +13,8 @@ group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "return", "in", "inout"]
 
 quad_number = 0
-
+temp_var_number = 0
+quad_list = []
 
 class Token:
     def __init__(self, recognized_string, family, line_number):
@@ -776,21 +777,58 @@ class Quad:
         return str(self.quad_label) + ": " + str(self.operator) + ", " \
                + str(self.operand1) + ", " + str(self.operand2) + ", " + str(self.operand3)
 
+    def set_operand3(self, operand):
+        self.operand3 = operand
 
 def gen_quad(operator, operand1, operand2, operand3):
-    return Quad(next_quad(), operator, operand1, operand2, operand3)
+    global quad_number
+    label = next_quad()
+    quad_number = quad_number + 1
+    new_quad = Quad(label, operator, operand1, operand2, operand3)
+    quad_list.append(new_quad)
+    return new_quad
 
 
 def next_quad():
-    global quad_number
-    return quad_number + 1
+    return quad_number
+
+
+def new_temp():
+    global temp_var_number
+    new_temp_variable = "T_" + str(temp_var_number)
+    temp_var_number = temp_var_number + 1
+    # TODO: Needs a condition to set "new_temp_variable" to 0
+    return new_temp_variable
+
+
+def empty_list():
+    return []
+
+
+def make_list(label):
+    return [label]
+
+
+def merge_list(list1, list2):
+    return list1 + list2
+
+
+def backpatch(list, label):
+    for i in list:
+        quad_list[i].set_operand3(label)
+
+
+def print_quads():
+    print("---------| QUADS |---------")
+    for quad in quad_list:
+        print(quad.__str__())
 
 
 def main():
     if (len(sys.argv) != 2):
         sys.exit("ERROR: Usage $python met.py <inputfile>")
     
-    print(sys.argv[1].split("."))
+    #print(sys.argv[1].split("."))
     #if (sys.argv[1].split(".")[2] != "ci"):
     #    sys.exit("ERROR: Compiler accepts only '.ci' files")
 
@@ -808,7 +846,19 @@ def main():
     #     if token.recognized_string == "eof":
     #          break
 
-    print(gen_quad("+", "_", "_", "_").__str__())
+    # print(gen_quad("+", "_", "_", "_").__str__())
+
+    x1 = make_list(next_quad())
+    gen_quad("jump", "_", "_", "_")
+    gen_quad("+", "a", "1", "a")
+    x2 = make_list(next_quad())
+    gen_quad("jump", "_", "_", "_")
+    x = merge_list(x1, x2)
+    gen_quad("+", "a", "2", "a")
+    backpatch(x, next_quad())
+
+    print(x)
+    print_quads()
 
 
 if __name__ == "__main__":
