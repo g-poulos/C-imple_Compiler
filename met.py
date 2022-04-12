@@ -16,6 +16,7 @@ quad_number = 0
 temp_var_number = 0
 quad_list = []
 
+
 class Token:
     def __init__(self, recognized_string, family, line_number):
         self.recognized_string = recognized_string
@@ -38,38 +39,35 @@ class Lex:
 
         self.file = open(self.file_name, "r")
 
-
     def __error(self,family,character):
         if family == "number" and character.isalpha():
-            sys.exit("ERROR: Expected number but found " + character + " in line " 
+            sys.exit("ERROR: Expected number but found " + character + " in line "
                         + str(self.current_line))
         elif family == "number":
-            sys.exit("ERROR: Constant exceeded bounds. Value must be between " + 
+            sys.exit("ERROR: Constant exceeded bounds. Value must be between " +
                         "-((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
         elif family == "keyword":
             sys.exit("ERROR: Expected string has length greater than allowed (30) in line "
                          + str(self.current_line))
         elif family == "assignment":
-            sys.exit("ERROR: Expected := but found '" + character + "' in line " 
+            sys.exit("ERROR: Expected := but found '" + character + "' in line "
                         + str(self.current_line))
         elif family == "comment":
             sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
         else:
-            sys.exit("ERROR: '" + character + "' does not belong to C-imple. line: " 
+            sys.exit("ERROR: '" + character + "' does not belong to C-imple. line: "
                         + str(self.current_line))
-
 
     def __is_number(self, character):
         global bool
         recognized_string = ""
-        while (True):
-            if (character.isnumeric()):
+        while True:
+            if character.isnumeric():
                 recognized_string = recognized_string + character
-            elif (character.isalpha()):
+            elif character.isalpha():
                 self.__error("number", character)
             else:
-                if (int(recognized_string) >= -(pow(2, 32) - 1) and
-                        int(recognized_string) <= (pow(2, 32) - 1)):
+                if -(pow(2, 32) - 1) <= int(recognized_string) <= (pow(2, 32) - 1):
                     if character == "":
                         bool = False
                     self.file.seek(self.file.tell() - 1)
@@ -77,7 +75,6 @@ class Lex:
                 else:
                     self.__error("number", character)
             character = self.file.read(1)
-
 
     def __is_keyword(self, first_char):
         global bool
@@ -99,7 +96,6 @@ class Lex:
             else:
                 recognized_string = recognized_string + character
 
-
     def __is_assignment(self, first_char):
         recognized_string = ""
         first_character = first_char
@@ -110,7 +106,6 @@ class Lex:
         else:
             character = first_character + second_character
             self.__error("assignment", character)
-
 
     def __is_rel_operator(self, first_char):
         recognized_string = ""
@@ -135,35 +130,32 @@ class Lex:
                     self.file.seek(self.file.tell() - 1)
                     return character, "relOperator"
 
-
     def __is_single_char(self, first_char):
         character = first_char
-        if (character == "+" or character == "-"):
+        if character == "+" or character == "-":
             return character, "addOperator"
-        elif (character == "*" or character == "/"):
+        elif character == "*" or character == "/":
             return character, "mulOperator"
-        elif (character in group_symbol_list):
+        elif character in group_symbol_list:
             return character, "groupSymbol"
-        elif (character in delimeter_list):
+        elif character in delimeter_list:
             return character, "delimeter"
 
-
     def __clear_blank_char(self, character):
-        while (True):
-            if (not character.isspace()):
+        while True:
+            if not character.isspace():
                 return character
-            elif (character == "\n"):
+            elif character == "\n":
                 self.current_line = self.current_line + 1
                 character = self.file.read(1)
             else:
                 character = self.file.read(1)
 
-
     def __is_comment(self, character):
         character = self.file.read(1)
-        while (character != "#"):
+        while character != "#":
             character = self.file.read(1)
-            if (not character):
+            if not character:
                 self.__error("comment", character)
         character = self.file.read(1)
         return character
@@ -183,7 +175,7 @@ class Lex:
             else:
                 first_char = self.__clear_blank_char(first_char)
 
-        if bool == False:
+        if not bool:
             first_char = "eof"
             family = "eof"
 
@@ -299,12 +291,12 @@ class Parser:
 
         elif error_code == "STATEMENTS_;":
             print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
-                  " but " + token.recognized_string + " appeared." + 
+                  " but " + token.recognized_string + " appeared." +
                   "\nAll statements should end with a ';'")
 
         elif error_code == "declaration":
             print("SYNTAX ERROR: Expected ';' in line " + str(lex.current_line) +
-                  " but " + token.recognized_string + " appeared." + 
+                  " but " + token.recognized_string + " appeared." +
                   "\nAll declarations should end with a ';'")
 
         elif error_code == "NO_EOF":
@@ -312,11 +304,11 @@ class Parser:
 
         elif error_code == "NO_DOT":
             print("SYNTAX ERROR: Every program should end with a fullstop, fullstop at the end is missing.")
-        
+
         elif error_code == "PROGRAM_NAME":
-            print("SYNTAX ERROR: The name of the program expected after the keyword 'program' in line" + 
+            print("SYNTAX ERROR: The name of the program expected after the keyword 'program' in line" +
                     str(lex.current_line) + " . The illegal program name '" + token.recognized_string + "' appeared.")
-        
+
         elif error_code == "BLOCK_}":
             print("SYNTAX ERROR: Expected '}' at the end of the block in line: " + str(lex.current_line))
 
@@ -341,14 +333,14 @@ class Parser:
                 self.__block()
                 if token.recognized_string == ".":
                     token = self.__get_token()
-                    if token.recognized_string == "eof": 
+                    if token.recognized_string == "eof":
                         token = self.__get_token()
                     else:
                         self.__error("NO_EOF")
                 else:
                     self.__error("NO_DOT")
             else:
-                self.__error("PROGRAM_NAME")  
+                self.__error("PROGRAM_NAME")
         else:
             self.__error("KEYWORD PROGRAM NOT FOUND")
 
@@ -362,9 +354,9 @@ class Parser:
             if token.recognized_string == "}":
                 token = self.__get_token()
             else:
-                self.__error("BLOCK_}")  
+                self.__error("BLOCK_}")
         else:
-            self.__error("BLOCK_{")  
+            self.__error("BLOCK_{")
 
     def __declarations(self):
         global token
@@ -664,7 +656,7 @@ class Parser:
                 token = self.__get_token()
                 self.__condition()
                 if not token.recognized_string == "]":
-                    self.__error("BOOLFACTOR_]")  
+                    self.__error("BOOLFACTOR_]")
                 token = self.__get_token()
             else:
                 self.__error("BOOLFACTOR_[")
@@ -672,7 +664,7 @@ class Parser:
             token = self.__get_token()
             self.__condition()
             if not token.recognized_string == "]":
-                self.__error("BOOLFACTOR_]") 
+                self.__error("BOOLFACTOR_]")
             token = self.__get_token()
         else:
             self.__expression()
@@ -780,6 +772,7 @@ class Quad:
     def set_operand3(self, operand):
         self.operand3 = operand
 
+
 def gen_quad(operator, operand1, operand2, operand3):
     global quad_number
     label = next_quad()
@@ -825,9 +818,9 @@ def print_quads():
 
 
 def main():
-    if (len(sys.argv) != 2):
+    if len(sys.argv) != 2:
         sys.exit("ERROR: Usage $python met.py <inputfile>")
-    
+
     #print(sys.argv[1].split("."))
     #if (sys.argv[1].split(".")[2] != "ci"):
     #    sys.exit("ERROR: Compiler accepts only '.ci' files")
