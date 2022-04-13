@@ -719,42 +719,50 @@ class Parser:
 
     def __reloperator(self):
         global token
+        operator = token.recognized_string
         rel_op_list = ["=", "<=", ">=", ">", "<", "<>"]
-        if not token.recognized_string in rel_op_list:
+        if operator not in rel_op_list:
             self.__error("EXPECTED REL_OP")
         token = self.__get_token()
+        return operator
 
     def __addoperator(self):
         global token
-        if not token.recognized_string == "+" and \
-                not token.recognized_string == "-":
+        operator = token.recognized_string
+        if not operator == "+" and not operator == "-":
             self.__error("EXPECTED ADD_OP")
         token = self.__get_token()
+        return operator
 
     def __muloperator(self):
         global token
-        if not token.recognized_string == "*" and \
-                not token.recognized_string == "/":
+        operator = token.recognized_string
+        if not operator == "*" and not operator == "/":
             self.__error("EXPECTED MUL_OP")
         token = self.__get_token()
+        return operator
 
     def __integervalue(self):
         global token
-        for i in range(len(token.recognized_string)):
-            if not token.recognized_string[i].isnumeric():
+        value = token.recognized_string
+        for i in range(len(value)):
+            if not value[i].isnumeric():
                 self.__error("NOT AN INTEGER")
         token = self.__get_token()
+        return value
 
     def __idvalue(self):
         global token
-        if not token.recognized_string[0].isalpha():
+        value = token.recognized_string
+        if not value[0].isalpha():
             self.__error("NOT ID")
 
-        for i in range(1, len(token.recognized_string) - 1):
-            if not token.recognized_string[i].isalpha() and \
-                    not token.recognized_string[i].isnumeric():
+        for i in range(1, len(value) - 1):
+            if not value[i].isalpha() and \
+                    not value[i].isnumeric():
                 self.__error("NOT ID")
         token = self.__get_token()
+        return value
 
 
 class Quad:
@@ -809,6 +817,7 @@ def merge_list(list1, list2):
 def backpatch(list, label):
     for i in list:
         quad_list[i].set_operand3(label)
+    # TODO: Free memory after list has been used
 
 
 def print_quads():
@@ -826,11 +835,12 @@ def main():
     #    sys.exit("ERROR: Compiler accepts only '.ci' files")
 
     # ------------------------------- Phase 1 main
-    # token1 = Token(None, None, 1)
-    # lex_object = Lex(1, sys.argv[1], None)
-    # parser_obj = Parser(lex_object)
-    #
-    # parser_obj.syntax_analyzer()
+    token1 = Token(None, None, 1)
+    lex_object = Lex(1, sys.argv[1], None)
+    parser_obj = Parser(lex_object)
+
+    parser_obj.syntax_analyzer()
+
     # -------------------------------
 
     # fp = 0
@@ -841,17 +851,17 @@ def main():
 
     # print(gen_quad("+", "_", "_", "_").__str__())
 
-    x1 = make_list(next_quad())
-    gen_quad("jump", "_", "_", "_")
-    gen_quad("+", "a", "1", "a")
-    x2 = make_list(next_quad())
-    gen_quad("jump", "_", "_", "_")
-    x = merge_list(x1, x2)
-    gen_quad("+", "a", "2", "a")
-    backpatch(x, next_quad())
-
-    print(x)
-    print_quads()
+    # x1 = make_list(next_quad())
+    # gen_quad("jump", "_", "_", "_")
+    # gen_quad("+", "a", "1", "a")
+    # x2 = make_list(next_quad())
+    # gen_quad("jump", "_", "_", "_")
+    # x = merge_list(x1, x2)
+    # gen_quad("+", "a", "2", "a")
+    # backpatch(x, next_quad())
+    #
+    # print(x)
+    # print_quads()
 
 
 if __name__ == "__main__":
