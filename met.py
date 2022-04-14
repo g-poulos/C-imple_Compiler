@@ -719,8 +719,11 @@ class Parser:
             return term
         elif token.recognized_string[0].isalpha():
             id_value = self.__idvalue()
-            self.__idtail(id_value)
-            return id_value
+            function_ret_val = self.__idtail(id_value)
+            if function_ret_val is None:
+                return id_value
+            else:
+                return function_ret_val
 
     def __idtail(self, function_id):
         global token
@@ -737,6 +740,7 @@ class Parser:
             if not token.recognized_string == ")":
                 self.__error("IDTAIL")
             token = self.__get_token()
+            return temp_var
 
     def __optionalSign(self):
         global token
