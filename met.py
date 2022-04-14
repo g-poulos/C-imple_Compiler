@@ -28,6 +28,9 @@ class Token:
                self.family + "\", line: " + str(self.line_number)
 
 
+token = Token(None, None, 1) # TODO: To make warnings go away
+
+
 class Lex:
     bool = True
     file = None
@@ -620,19 +623,23 @@ class Parser:
 
     def __actualparlist(self):
         global token
-        self.__actualparitem()
+        par_list = []
+        par_item = self.__actualparitem()
+        par_list.append(par_item)
         while token.recognized_string == ",":
             token = self.__get_token()
-            self.__actualparitem()
+            par_item = self.__actualparitem()
+            par_list.append(par_item)
+        return par_list
 
     def __actualparitem(self):
         global token
         if token.recognized_string == "in":
             token = self.__get_token()
-            self.__expression()
+            return self.__expression(), "CV"
         elif token.recognized_string == "inout":
             token = self.__get_token()
-            self.__idvalue()
+            return self.__idvalue(), "REF"
 
     def __condition(self):
         global token
@@ -673,40 +680,60 @@ class Parser:
 
     def __expression(self):
         global token
-        self.__optionalSign()
-        self.__term()
+        sign = self.__optionalSign()
+        term_1 = self.__term()
+        if sign is not None:
+            temp_var = new_temp()
+            gen_quad(sign, term_1, "0", temp_var)
+            term_1 = temp_var
         while token.recognized_string == "+" or \
                 token.recognized_string == "-":
-            self.__addoperator()
-            self.__term()
+            operator = self.__addoperator()
+            term_2 = self.__term()
+            temp_var = new_temp()
+            gen_quad(operator, term_2, term_1, temp_var)
+        return term_1
 
     def __term(self):
         global token
-        self.__factor()
+        factor_1 = self.__factor()
         while token.recognized_string == "*" or \
                 token.recognized_string == "/":
-            self.__muloperator()
-            self.__factor()
+            operator = self.__muloperator()
+            factor_2 = self.__factor()
+            temp_var = new_temp()
+            gen_quad(operator, factor_1, factor_2, temp_var)
+            factor_1 = temp_var
+        return factor_1
 
     def __factor(self):
         global token
         if token.recognized_string.isnumeric():
-            self.__integervalue()
+            return self.__integervalue()
         elif token.recognized_string == "(":
             token = self.__get_token()
-            self.__expression()
+            term = self.__expression()
             if not token.recognized_string == ")":
                 self.__error("FACTOR1")
             token = self.__get_token()
+            return term
         elif token.recognized_string[0].isalpha():
-            self.__idvalue()
-            self.__idtail()
+            id_value = self.__idvalue()
+            self.__idtail(id_value)
+            return id_value
 
-    def __idtail(self):
+    def __idtail(self, function_id):
         global token
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__actualparlist()
+            par_list = self.__actualparlist()
+
+            for par in par_list:
+                gen_quad("par", par[0], par[1], "_")
+            temp_var = new_temp()
+            gen_quad("par", temp_var, "RET", "_")
+            gen_quad("call", "_", "_", function_id)
+
             if not token.recognized_string == ")":
                 self.__error("IDTAIL")
             token = self.__get_token()
@@ -715,7 +742,7 @@ class Parser:
         global token
         if token.recognized_string == "+" or \
                 token.recognized_string == "-":
-            self.__addoperator()
+            return self.__addoperator()
 
     def __reloperator(self):
         global token
@@ -798,7 +825,6 @@ def new_temp():
     global temp_var_number
     new_temp_variable = "T_" + str(temp_var_number)
     temp_var_number = temp_var_number + 1
-    # TODO: Needs a condition to set "new_temp_variable" to 0
     return new_temp_variable
 
 
@@ -841,6 +867,8 @@ def main():
 
     parser_obj.syntax_analyzer()
 
+    print_quads()
+
     # -------------------------------
 
     # fp = 0
@@ -859,8 +887,7 @@ def main():
     # x = merge_list(x1, x2)
     # gen_quad("+", "a", "2", "a")
     # backpatch(x, next_quad())
-    #
-    # print(x)
+
     # print_quads()
 
 
