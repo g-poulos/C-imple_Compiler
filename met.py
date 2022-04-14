@@ -12,7 +12,7 @@ group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "while", "incase", "or", "call", "case", "default",
                       "return", "in", "inout"]
 
-quad_number = 0
+quad_number = 1
 temp_var_number = 0
 quad_list = []
 
@@ -332,8 +332,9 @@ class Parser:
         if token.recognized_string == "program":
             token = self.__get_token()
             if token.family == "identifier":
+                block_name = token.recognized_string
                 token = self.__get_token()
-                self.__block()
+                self.__block(block_name)
                 if token.recognized_string == ".":
                     token = self.__get_token()
                     if token.recognized_string == "eof":
@@ -347,13 +348,15 @@ class Parser:
         else:
             self.__error("KEYWORD PROGRAM NOT FOUND")
 
-    def __block(self):
+    def __block(self, block_name):
         global token
         if token.recognized_string == "{":
             token = self.__get_token()
             self.__declarations()
             self.__subprograms()
+            gen_quad("begin_block", block_name, "_", "_")
             self.__blockstatements()
+            gen_quad("end_block", block_name, "_", "_")
             if token.recognized_string == "}":
                 token = self.__get_token()
             else:
@@ -390,13 +393,13 @@ class Parser:
         if token.recognized_string == "function" or \
                 token.recognized_string == "procedure":
             token = self.__get_token()
-            self.__idvalue()
+            block_name = self.__idvalue()
             if token.recognized_string == "(":
                 token = self.__get_token()
                 self.__formalparlist()
                 if token.recognized_string == ")":
                     token = self.__get_token()
-                    self.__block()
+                    self.__block(block_name)
                 else:
                     self.__error("subprogram")
 
@@ -493,10 +496,12 @@ class Parser:
 
     def __assignStat(self):
         global token
-        self.__idvalue()
+        id_value = self.__idvalue()
         if token.recognized_string == ":=":
             token = self.__get_token()
-            self.__expression()
+            term = self.__expression()
+            gen_quad(":=", term, "_", id_value)
+            print(id_value, term)
         else:
             self.__error("assignStat")
 
@@ -691,7 +696,8 @@ class Parser:
             operator = self.__addoperator()
             term_2 = self.__term()
             temp_var = new_temp()
-            gen_quad(operator, term_2, term_1, temp_var)
+            gen_quad(operator, term_1, term_2, temp_var)
+            term_1 = temp_var
         return term_1
 
     def __term(self):
@@ -805,8 +811,8 @@ class Quad:
         self.operand3 = operand3
 
     def __str__(self):
-        return str(self.quad_label) + ": " + str(self.operator) + ", " \
-               + str(self.operand1) + ", " + str(self.operand2) + ", " + str(self.operand3)
+        return str(self.quad_label) + ": " + str(self.operator) + " " \
+               + str(self.operand1) + " " + str(self.operand2) + " " + str(self.operand3)
 
     def set_operand3(self, operand):
         self.operand3 = operand
