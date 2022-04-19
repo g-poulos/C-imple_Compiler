@@ -1,0 +1,55 @@
+program happyday
+{
+    declare x;
+    declare y;
+    declare z,w;
+
+    #functioionn#
+
+    function happyDay(in x,in y,in z,in w)
+    {
+
+        while(x >0 and y >z )
+        {
+            w:=w+1;
+        };
+        forcase
+            case(z<1)
+            {
+                z:=z+1;
+            }
+            default
+                z:=z-1;;
+        if(y>z)
+            print(y);
+        else
+            print(y+z);;
+        incase
+            case(z>=y)
+                z:=z+y;
+            case(x<y)
+                x:=x-y;;
+
+
+        return( x+y+z+w/x*y*z*w);
+    }
+
+    procedure proc()
+    {
+        function subfunc(){
+            return (w+x);
+            #epistredw - #
+            #popa#
+        }
+        w:=w+1;
+
+    }
+
+    #main#
+    input(x);
+    input(y);
+    input(z);
+    input(w);
+    call proc();
+    print(happyDay(in x, in y, in z,in w));
+}.

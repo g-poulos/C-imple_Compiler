@@ -1,0 +1,32 @@
+program tester
+{
+    # This program's purpose is to cover many checks that weren't covered in the given files #
+	declare a,b,c,d;
+
+	function bigExpressionsTester(in x, in y, in z)
+	{
+		declare k;
+
+		procedure funcInsideFunc(in i, in j)
+		{
+			return(i)
+
+		}
+
+		k := 12/z + 14/z + y*x*(34+34+35+23)*(funcInsideFunc(in x+y, in y+z)+999);
+
+	}
+
+	incase
+	    case (not[a>b and c<d or a<>c and b>=d])
+        {
+            call bigExpressionsTester(in x, in y, in z);
+            return(0);
+        }
+
+
+}.
+
+
+
+

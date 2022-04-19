@@ -1,0 +1,25 @@
+
+program armstrong {
+
+    declare num;
+    declare sum;
+    declare temp;
+    declare digit;
+    declare a,b;
+
+    input(num);
+    temp := num;
+    while (temp > 0)
+    {
+        digit := temp / 10;
+        sum := sum + digit * digit * digit;
+        temp := temp / 10;
+    };
+
+    if (num = 0)
+        print(num);
+    else
+        print(num);
+    
+
+}.

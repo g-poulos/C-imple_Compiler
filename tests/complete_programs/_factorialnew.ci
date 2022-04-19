@@ -1,0 +1,37 @@
+
+
+program factorial {
+
+     # declarations #
+
+     declare x;
+     declare i,fact;
+     
+     a := 12;
+     v := 42;
+
+     # main #
+     input(x);
+     if (i=2)
+     {
+         print(x);
+         input(y);
+     }; 
+
+     if (y = (y/x)*x) 
+        return (1);
+    
+    else
+        return (0);;
+
+    input(x); 
+    
+     while (i<>x)
+     {
+         fact:=fact*i;
+         i:=i+1;
+     };
+
+     print(fact); 
+
+}.

@@ -1,0 +1,97 @@
+
+# This program tests the behavior of the Parser with all the possible
+  structures of syntax. Normally it should not return any error. #
+
+program TestCimpleParser
+
+# program block #
+{
+	# declarations #
+	
+	declare x, y, z;
+	declare i,j,k;
+	
+	#subprograms#
+	
+	function funct1()
+	{
+		declare tmp;
+		tmp := tmp + 1;
+		return (tmp);
+	}
+	
+	procedure proced1()
+	{
+		print(1+2+3);
+	}
+	
+	function funct2( in x, inout y)
+	{
+		declare a,b;
+		return ((x+y)-(a+b));
+	}
+	
+	procedure proced2( in e, in f, inout z)
+	{
+		input(x);
+	}
+	
+	# blockstatements #
+	
+	x:=1;
+	y:=1;
+	
+	if (x=0 or x=1 and [not[y<0 and z<>1]])
+		y := x + 100;
+	;
+
+	if (x > 1)
+		y := x + 200;
+	else
+	{
+		y := x*3 + 300/z;
+		x := y + 500
+	}
+	;
+	
+	while (i<=x)
+	{
+		x:=x*i;
+		y:=y+1;
+	}
+	;
+	
+	switchcase
+		case(x = 1) {
+			y := 250;
+			call funct1()
+		}
+		case(x = 2) {
+			call proced1();
+			y := 500;
+			z := 200
+		}
+		default y := 1000;
+	;
+	
+	forcase
+		case(y >= 1) {
+			x := x + 50;
+			call funct2(in (100-3-4), inout y)
+		}
+		case(y >= 200)
+			x := x + 500;
+		default {
+			x := 1000
+		}
+	;
+
+	incase
+		case(y >= 1)
+			x := x - 50;
+		case(y >= 200)
+			x := x - 500;
+	;
+	
+	print(1+2-(x+y)+funct2( in i, inout j)-35*105);
+}.

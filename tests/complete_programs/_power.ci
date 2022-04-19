@@ -1,0 +1,24 @@
+
+program test1 {
+
+    declare x,sum;
+    declare y;
+
+    function power(in x)
+    {
+        sum := x + y
+    }
+
+    call power(inout x);
+    
+    if (x>=0) 
+        print(x);;
+    while(x>0)
+    {
+        y := y + 1;
+        x := x * 2;
+    };
+    print(x);
+    print(y);
+
+}.

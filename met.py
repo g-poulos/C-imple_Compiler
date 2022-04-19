@@ -525,6 +525,7 @@ class Parser:
         global token
         token = self.__get_token()
         while token.recognized_string == "case":
+            token = self.__get_token()
             if token.recognized_string == "(":
                 token = self.__get_token()
                 self.__condition()
@@ -653,8 +654,8 @@ class Parser:
         global token
         self.__boolterm()
         while token.recognized_string == "or":
-            self.__get_token()
-            self.__boolfactor()
+            token = self.__get_token()
+            self.__boolterm()
 
     def __boolterm(self):
         global token
@@ -880,7 +881,7 @@ def main():
 
     parser_obj.syntax_analyzer()
 
-    print_quads()
+    # print_quads()
 
     # -------------------------------
 

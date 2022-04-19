@@ -1,0 +1,21 @@
+
+program max3
+{
+    # max of 3 nums #
+    declare a;
+    declare b;
+    declare c;
+
+    input(a);
+    input(b);
+    input(c);
+
+    if (a>b and a>c)
+        print(a);;
+    if (b>a and b>c)
+        print(b);;
+    if (c>a and c>b)
+        print(c);;
+    
+    
+}.
