@@ -1,84 +1,11 @@
 # C-imple_Compiler
 
-
-    def __program(self):
-
-    def __block(self): OK
-
-    def __declarations(self):
-
-    def __varlist(self):
-
-    def __subprograms(self):
-
-    def __subprogram(self):
-
-    def __formalparlist(self):
-
-    def __formalparitem(self):
-
-    def __statements(self):
-
-    def __blockstatements(self):
-
-    def __ifStat(self):
-
-    def __elsepart(self):
-    
-    def __statement(self):
-
-    def __assignStat(self):
-
-    def __whileStat(self):
-
-    def __switchcaseStat(self):
-
-    def __forcaseStat(self):
-
-    def __incaseStat(self):
-
-    def __returnStat(self):
-
-    def __callStat(self):
-
-    def __printStat(self):
-
-    def __inputStat(self):
-
-    def __actualparlist(self):
-
-    def __actualparitem(self):
-
-    def __condition(self):
-
-    def __boolterm(self):
-
-    def __boolfactor(self):
-
-    def __expression(self):
-
-    def __term(self):
-
-    def __factor(self):
-
-    def __idtail(self): 
-
-    def __optionalSign: OK
-
-    def __reloperator(self): OK
-
-    def __addoperator(self): OK
-
-    def __muloperator(self): OK
-
-    def __integervalue(self): OK 
-
-    def __idvalue(self): OK
-
-1: begin_block P1 _ _
-2: - Y 1 T_0
-3: := T_0 _ Y
-4: = X 1 6
+## Example 1 - Expected Outcome
+```
+1: begin_block P1 _ _    
+2: - Y 1 T_0             
+3: := T_0 _ Y            
+4: = X 1 6               
 5: jump _ _ 8
 6: retv X _ _
 7: jump _ _ 14
@@ -99,3 +26,22 @@
 22: := T_3 _ g
 23: halt _ _ _
 24: end_block ex1 _ _
+```
+
+## Conditionals Example - Expected Outcome
+```
+1: begin_block conditional _ _
+2: >, a, b, _       # true
+3: jump, _, _, 4
+4: >, a, c, 6
+5: jump, _, _, _    # false
+6: >, b, c, 10
+7: jump, _, _, 8
+8: >, a, 1, 108
+9: jump, _, _, _    # false
+10: =, b, 1, _       # true
+11: jump, _, _, _
+12: retv X _ _
+13: halt _ _ _
+14: end_block conditional _ _
+```

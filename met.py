@@ -652,25 +652,35 @@ class Parser:
 
     def __condition(self):
         global token
-        self.__boolterm()
+        b_true, b_false = self.__boolterm()
         while token.recognized_string == "or":
             token = self.__get_token()
-            self.__boolterm()
+            backpatch(b_false, next_quad())
+            q2_true, q2_false = self.__boolterm()
+            b_false = merge_list(b_false, q2_false)
+            b_true = q2_true
+        return b_true, b_false
 
     def __boolterm(self):
         global token
-        self.__boolfactor()
+        q_true, q_false = self.__boolfactor()
         while token.recognized_string == "and":
             token = self.__get_token()
-            self.__boolfactor()
+            backpatch(q_true, next_quad())
+            r2_true, r2_false = self.__boolfactor()
+            q_false = merge_list(q_false, r2_false)
+            q_true = r2_true
+        return q_true, q_false
 
     def __boolfactor(self):
         global token
+        r_true = []
+        r_false = []
         if token.recognized_string == "not":
             token = self.__get_token()
             if token.recognized_string == "[":
                 token = self.__get_token()
-                self.__condition()
+                r_false, r_true = self.__condition()
                 if not token.recognized_string == "]":
                     self.__error("BOOLFACTOR_]")
                 token = self.__get_token()
@@ -678,14 +688,19 @@ class Parser:
                 self.__error("BOOLFACTOR_[")
         elif token.recognized_string == "[":
             token = self.__get_token()
-            self.__condition()
+            r_true, r_false = self.__condition()
             if not token.recognized_string == "]":
                 self.__error("BOOLFACTOR_]")
             token = self.__get_token()
         else:
-            self.__expression()
-            self.__reloperator()
-            self.__expression()
+            term1 = self.__expression()
+            operator = self.__reloperator()
+            term2 = self.__expression()
+            r_true = make_list(next_quad())
+            gen_quad(operator, term1, term2, "_")
+            r_false = make_list(next_quad())
+            gen_quad("jump", "_", "_", "_")
+        return r_true, r_false
 
     def __expression(self):
         global token
@@ -881,7 +896,7 @@ def main():
 
     parser_obj.syntax_analyzer()
 
-    # print_quads()
+    print_quads()
 
     # -------------------------------
 

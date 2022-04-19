@@ -1,0 +1,7 @@
+program numeric
+{
+    # Numerical test #
+    g:= a+b*c+a*(b+c);
+    h:= 3+(c*(a+b)*d);
+}.
+

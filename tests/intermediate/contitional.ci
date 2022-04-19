@@ -1,0 +1,5 @@
+program conditional
+{
+    if (a>b or a>c and [b>c or a>1] and b<>1)
+        return(X);
+}.
