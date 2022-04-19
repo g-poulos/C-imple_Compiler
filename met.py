@@ -456,13 +456,18 @@ class Parser:
         token = self.__get_token()
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__condition()
+            cond_true, cond_false = self.__condition()
+            backpatch(cond_true, next_quad())
             if token.recognized_string == ")":
                 token = self.__get_token()
                 self.__statements()
             else:
                 self.__error("IFSTAT_)")
+            if_list = make_list(next_quad())
+            gen_quad("jump", "_", "_", "_")
+            backpatch(cond_false, next_quad())
             self.__elsepart()
+            backpatch(if_list, next_quad())
         else:
             self.__error("IFSTAT_(")
 
@@ -510,12 +515,16 @@ class Parser:
     def __whileStat(self):
         global token
         token = self.__get_token()
+        cond_quad = next_quad()
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__condition()
+            cond_true, cond_false = self.__condition()
             if token.recognized_string == ")":
                 token = self.__get_token()
+                backpatch(cond_true, next_quad())
                 self.__statements()
+                gen_quad("jump", "_", "_", cond_quad)
+                backpatch(cond_false, next_quad())
             else:
                 self.__error("WHILESTAT_)")
         else:
