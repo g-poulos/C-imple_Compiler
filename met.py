@@ -11,7 +11,7 @@ group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "input", "declare", "else", "forcase", "and", "procedure",
                       "while", "incase", "or", "call", "case", "default",
                       "return", "in", "inout"]
-
+program_name = ""
 quad_number = 1
 temp_var_number = 0
 quad_list = []
@@ -328,13 +328,14 @@ class Parser:
 
     def __program(self):
         global token
+        global program_name
 
         if token.recognized_string == "program":
             token = self.__get_token()
             if token.family == "identifier":
-                block_name = token.recognized_string
+                program_name = token.recognized_string
                 token = self.__get_token()
-                self.__block(block_name)
+                self.__block(program_name)
                 if token.recognized_string == ".":
                     token = self.__get_token()
                     if token.recognized_string == "eof":
@@ -356,6 +357,8 @@ class Parser:
             self.__subprograms()
             gen_quad("begin_block", block_name, "_", "_")
             self.__blockstatements()
+            if block_name == program_name:
+                gen_quad("halt", "_", "_", "_")
             gen_quad("end_block", block_name, "_", "_")
             if token.recognized_string == "}":
                 token = self.__get_token()
@@ -501,7 +504,6 @@ class Parser:
             token = self.__get_token()
             term = self.__expression()
             gen_quad(":=", term, "_", id_value)
-            print(id_value, term)
         else:
             self.__error("assignStat")
 
@@ -582,7 +584,8 @@ class Parser:
         token = self.__get_token()
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__expression()
+            term = self.__expression()
+            gen_quad("retv", term, "_", "_")
             if not token.recognized_string == ")":
                 self.__error("returnStat")
             token = self.__get_token()
@@ -852,7 +855,7 @@ def merge_list(list1, list2):
 
 def backpatch(list, label):
     for i in list:
-        quad_list[i].set_operand3(label)
+        quad_list[i-1].set_operand3(label)
     # TODO: Free memory after list has been used
 
 
@@ -897,7 +900,6 @@ def main():
     # x = merge_list(x1, x2)
     # gen_quad("+", "a", "2", "a")
     # backpatch(x, next_quad())
-
     # print_quads()
 
 
