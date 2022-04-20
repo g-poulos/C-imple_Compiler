@@ -42,6 +42,9 @@ class Lex:
 
         self.file = open(self.file_name, "r")
 
+    def get_file(self):
+        return self.file
+
     def __error(self,family,character):
         if family == "number" and character.isalpha():
             sys.exit("ERROR: Expected number but found " + character + " in line "
@@ -223,6 +226,7 @@ class Parser:
         global token
         token = self.__get_token()
         self.__program()
+        self.lexical_analyzer.get_file().close()
         print("Compilation successfully completed")
 
         # For testing only
@@ -899,7 +903,6 @@ def main():
     #    sys.exit("ERROR: Compiler accepts only '.ci' files")
 
     # ------------------------------- Phase 1 main
-    token1 = Token(None, None, 1)
     lex_object = Lex(1, sys.argv[1], None)
     parser_obj = Parser(lex_object)
 
