@@ -1,0 +1,11 @@
+program max
+{    declare a,b,c,d,e;
+     function MAX(in x, in y)
+     {   if (x>y)
+            return(x);
+         else
+            return(y);
+     }
+     e:=MAX(in MAX(in a, in b),
+        in MAX(in c, in d));
+}.

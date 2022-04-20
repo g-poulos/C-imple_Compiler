@@ -544,15 +544,21 @@ class Parser:
 
     def __switchcaseStat(self):
         global token
+        exit_list = empty_list()
         token = self.__get_token()
         while token.recognized_string == "case":
             token = self.__get_token()
             if token.recognized_string == "(":
                 token = self.__get_token()
-                self.__condition()
+                cond_true, cond_false = self.__condition()
                 if token.recognized_string == ")":
+                    backpatch(cond_true, next_quad())
                     token = self.__get_token()
                     self.__statements()
+                    t = make_list(next_quad())
+                    gen_quad("jump", "_", "_", "_")
+                    exit_list = merge_list(exit_list, t)
+                    backpatch(cond_false, next_quad())
                 else:
                     self.__error("SWITCHCASESTAT_)")
             else:
@@ -560,6 +566,7 @@ class Parser:
         if token.recognized_string == "default":
             token = self.__get_token()
             self.__statements()
+            backpatch(exit_list, next_quad())
         else:
             self.__error("SWITCHCASESTAT_DEFAULT")
 
@@ -893,7 +900,7 @@ def merge_list(list1, list2):
 def backpatch(list, label):
     for i in list:
         quad_list[i-1].set_operand3(label)
-    # TODO: Free memory after list has been used
+    list.clear()
 
 
 def print_quads():
