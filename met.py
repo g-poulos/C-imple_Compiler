@@ -17,6 +17,14 @@ temp_var_number = 0
 quad_list = []
 
 
+def reset_global_variables():
+    global program_name, quad_number, temp_var_number
+    program_name = ""
+    quad_number = 1
+    temp_var_number = 0
+    quad_list.clear()
+
+
 class Token:
     def __init__(self, recognized_string, family, line_number):
         self.recognized_string = recognized_string
