@@ -5,7 +5,10 @@ from met import *
 program_pairs = [["tests/intermediate/intermediate_test_1.ci", "tests/intermediate/expected/inde_expected_1.txt"],
                  ["tests/intermediate/intermediate_test_2.ci", "tests/intermediate/expected/inde_expected_2.txt"],
                  ["tests/intermediate/intermediate_test_3.ci", "tests/intermediate/expected/inde_expected_3.txt"],
-                    ]
+                 ["tests/intermediate/switchCase_test.ci", "tests/intermediate/expected/switchCase_expected.txt"],
+                 ["tests/intermediate/forCase_test.ci", "tests/intermediate/expected/forCase_expected.txt"],
+#                 ["tests/intermediate/inCase_test.ci", "tests/intermediate/expected/inCase_expected.txt"]
+                 ]
 
 
 def file_to_list(filename):

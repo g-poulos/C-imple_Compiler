@@ -1,0 +1,13 @@
+1: begin_block forcaseTest _ _
+2: > a 0 4
+3: jump _ _ 7
+4: - a 1 T_0
+5: := T_0 _ a
+6: jump _ _ 2
+7: < a 0 9
+8: jump _ _ 12
+9: + a 1 T_1
+10: := T_1 _ a
+11: jump _ _ 2
+12: halt _ _ _
+13: end_block forcaseTest _ _

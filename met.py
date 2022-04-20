@@ -572,15 +572,19 @@ class Parser:
 
     def __forcaseStat(self):
         global token
+        first_cond_quad = next_quad()
         token = self.__get_token()
         while token.recognized_string == "case":
             token = self.__get_token()
             if token.recognized_string == "(":
                 token = self.__get_token()
-                self.__condition()
+                cond_true, cond_false = self.__condition()
                 if token.recognized_string == ")":
                     token = self.__get_token()
+                    backpatch(cond_true, next_quad())
                     self.__statements()
+                    gen_quad("jump", "_", "_", str(first_cond_quad))
+                    backpatch(cond_false, next_quad())
                 else:
                     self.__error("FORSTAT_)")
             else:
@@ -593,20 +597,27 @@ class Parser:
 
     def __incaseStat(self):
         global token
+        flag = new_temp()
+        first_cond_quad = next_quad()
+        gen_quad(":=", "0", "_", flag)
         token = self.__get_token()
         while token.recognized_string == "case":
             token = self.__get_token()
             if token.recognized_string == "(":
                 token = self.__get_token()
-                self.__condition()
+                cond_true, cond_false = self.__condition()
                 if token.recognized_string == ")":
                     token = self.__get_token()
+                    backpatch(cond_true, next_quad())
                     self.__statements()
+                    gen_quad(":=", "1", "_", flag)
+                    backpatch(cond_false, next_quad())
                 else:
                     self.__error("incaseStat")
 
             else:
                 self.__error("incaseStat")
+        gen_quad(":=", "1", flag, first_cond_quad)
 
     def __returnStat(self):
         global token
