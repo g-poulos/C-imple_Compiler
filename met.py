@@ -469,15 +469,15 @@ class Parser:
         if token.recognized_string == "(":
             token = self.__get_token()
             cond_true, cond_false = self.__condition()
-            backpatch(cond_true, next_quad())
             if token.recognized_string == ")":
                 token = self.__get_token()
+                backpatch(cond_true, next_quad())
                 self.__statements()
+                if_list = make_list(next_quad())
+                gen_quad("jump", "_", "_", "_")
+                backpatch(cond_false, next_quad())
             else:
                 self.__error("IFSTAT_)")
-            if_list = make_list(next_quad())
-            gen_quad("jump", "_", "_", "_")
-            backpatch(cond_false, next_quad())
             self.__elsepart()
             backpatch(if_list, next_quad())
         else:
@@ -617,7 +617,7 @@ class Parser:
 
             else:
                 self.__error("incaseStat")
-        gen_quad(":=", "1", flag, first_cond_quad)
+        gen_quad("=", flag, "1", first_cond_quad)
 
     def __returnStat(self):
         global token
@@ -625,7 +625,7 @@ class Parser:
         if token.recognized_string == "(":
             token = self.__get_token()
             term = self.__expression()
-            gen_quad("retv", term, "_", "_")
+            gen_quad("RET", term, "_", "_")
             if not token.recognized_string == ")":
                 self.__error("returnStat")
             token = self.__get_token()
@@ -696,8 +696,8 @@ class Parser:
             token = self.__get_token()
             backpatch(b_false, next_quad())
             q2_true, q2_false = self.__boolterm()
-            b_false = merge_list(b_false, q2_false)
-            b_true = q2_true
+            b_true = merge_list(b_true, q2_true)
+            b_false = q2_false
         return b_true, b_false
 
     def __boolterm(self):
@@ -713,8 +713,6 @@ class Parser:
 
     def __boolfactor(self):
         global token
-        r_true = []
-        r_false = []
         if token.recognized_string == "not":
             token = self.__get_token()
             if token.recognized_string == "[":
@@ -799,7 +797,7 @@ class Parser:
                 gen_quad("par", par[0], par[1], "_")
             temp_var = new_temp()
             gen_quad("par", temp_var, "RET", "_")
-            gen_quad("call", "_", "_", function_id)
+            gen_quad("call", function_id, "_", "_")
 
             if not token.recognized_string == ")":
                 self.__error("IDTAIL")

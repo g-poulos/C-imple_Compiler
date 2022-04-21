@@ -1,0 +1,14 @@
+1: begin_block conditional _ _
+2: > a b 12
+3: jump _ _ 4
+4: > a c 6
+5: jump _ _ 13
+6: > b c 10
+7: jump _ _ 8
+8: > a 1 10
+9: jump _ _ 13
+10: <> b 1 12
+11: jump _ _ 13
+12: jump _ _ 13
+13: halt _ _ _
+14: end_block conditional _ _

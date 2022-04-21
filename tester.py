@@ -7,8 +7,9 @@ program_pairs = [["tests/intermediate/intermediate_test_1.ci", "tests/intermedia
                  ["tests/intermediate/intermediate_test_3.ci", "tests/intermediate/expected/inde_expected_3.txt"],
                  ["tests/intermediate/switchCase_test.ci", "tests/intermediate/expected/switchCase_expected.txt"],
                  ["tests/intermediate/forCase_test.ci", "tests/intermediate/expected/forCase_expected.txt"],
-#                 ["tests/intermediate/inCase_test.ci", "tests/intermediate/expected/inCase_expected.txt"]
-                 ]
+#                 ["tests/intermediate/inCase_test.ci", "tests/intermediate/expected/inCase_expected.txt"],
+                 ["tests/intermediate/conditional.ci", "tests/intermediate/expected/conditional_expected.txt"],
+                 ["tests/intermediate/small.ci", "tests/intermediate/expected/small_expected.txt"]]
 
 
 def file_to_list(filename):

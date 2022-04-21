@@ -1,0 +1,31 @@
+program small
+{
+    # declare A:=1; #
+    declare b,g,f;
+    function P1(in X, inout Y)
+    { declare e,f;
+        function P11(inout X)
+        {   declare e;
+            e:=A;
+            X:=Y;
+            f:=b;
+            return(e);
+        }
+
+        # code for P1 #
+        b:=X;
+        e:=P11(inout X);
+        e:=P1(in X,inout Y);
+        X:=b;
+        return(e);
+    }
+    # code for main #
+    if (b>1 and f<2 or g+1<f+b)
+    {
+        f:=P1(in g);
+    }
+    else
+    {
+        f:=1;
+    }
+}.
