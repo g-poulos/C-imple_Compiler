@@ -650,7 +650,8 @@ class Parser:
         token = self.__get_token()
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__expression()
+            term = self.__expression()
+            gen_quad("out", term, "_", "_")
             if not token.recognized_string == ")":
                 self.__error("printStat")
             token = self.__get_token()
@@ -662,7 +663,8 @@ class Parser:
         token = self.__get_token()
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__idvalue()
+            value = self.__idvalue()
+            gen_quad("in", value, "_", "_")
             if not token.recognized_string == ")":
                 self.__error("inputStat")
             token = self.__get_token()

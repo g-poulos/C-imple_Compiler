@@ -9,7 +9,8 @@ program_pairs = [["tests/intermediate/intermediate_test_1.ci", "tests/intermedia
                  ["tests/intermediate/forCase_test.ci", "tests/intermediate/expected/forCase_expected.txt"],
 #                 ["tests/intermediate/inCase_test.ci", "tests/intermediate/expected/inCase_expected.txt"],
                  ["tests/intermediate/conditional.ci", "tests/intermediate/expected/conditional_expected.txt"],
-                 ["tests/intermediate/small.ci", "tests/intermediate/expected/small_expected.txt"]]
+                 ["tests/intermediate/small.ci", "tests/intermediate/expected/small_expected.txt"],
+                 ["tests/intermediate/ifwhile.ci", "tests/intermediate/expected/ifwhile_expected.txt"]]
 
 
 def file_to_list(filename):
@@ -26,6 +27,9 @@ class QuadTester(unittest.TestCase):
             self.__test_quad_list(pair[0], pair[1])
 
     def __test_quad_list(self, program, expected):
+        test_name = program.split("/")
+        test_name = test_name[len(test_name)-1]
+        print(Fore.CYAN + "Processing " + test_name + "...")
         expected_quads = file_to_list(expected)
         lex_object = Lex(1, program, None)
         parser_obj = Parser(lex_object)
@@ -34,7 +38,7 @@ class QuadTester(unittest.TestCase):
         for quad, expected_quad in zip(quad_list, expected_quads):
             self.assertEqual(str(expected_quad), str(quad))
         reset_global_variables()
-        print(Fore.GREEN + "DONE:" + program)
+        print(Fore.GREEN + "DONE\n")
 
 
 
