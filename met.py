@@ -17,7 +17,7 @@ temp_var_number = 0
 quad_list = []
 
 
-def reset_global_variables():
+def reset_global_variables():  # Resets global variables for testing
     global program_name, quad_number, temp_var_number
     program_name = ""
     quad_number = 1
@@ -874,6 +874,53 @@ class Quad:
 
     def set_operand3(self, operand):
         self.operand3 = operand
+
+
+class Variable:
+    def __init__(self, name, type, offset):
+        self.name = name
+        self.type = type
+        self.offset = offset
+
+
+class Function:
+    def __init__(self, name, type, start_quad, list_argument, frame_length):
+        self.name = name
+        self.type = type
+        self.start_quad = start_quad
+        self.list_argument = list_argument
+        self.frame_length = frame_length
+
+
+class Constant:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+
+class Parameter:
+    def __init__(self, name, par_mode, offset):
+        self.name = name
+        self.par_mode = par_mode
+        self.offset = offset
+
+
+class TempVariable:
+    def __init__(self, name, offset):
+        self.name = name
+        self.offset = offset
+
+
+class Scope:
+    def __init__(self, list_entity, nesting_level):
+        self.list_entity = list_entity
+        self.nesting_level = nesting_level
+
+
+class Argument:
+    def __init__(self, par_mode, type):
+        self.par_mode = par_mode
+        self.type = type
 
 
 def gen_quad(operator, operand1, operand2, operand3):
