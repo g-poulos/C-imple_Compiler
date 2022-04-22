@@ -16,6 +16,8 @@ quad_number = 1
 temp_var_number = 0
 quad_list = []
 
+scope_list = []
+
 
 def reset_global_variables():  # Resets global variables for testing
     global program_name, quad_number, temp_var_number
@@ -36,7 +38,7 @@ class Token:
                self.family + "\", line: " + str(self.line_number)
 
 
-token = Token(None, None, 1) # TODO: To make warnings go away
+token = Token(None, None, 1)
 
 
 class Lex:
@@ -53,24 +55,24 @@ class Lex:
     def get_file(self):
         return self.file
 
-    def __error(self,family,character):
+    def __error(self, family, character):
         if family == "number" and character.isalpha():
             sys.exit("ERROR: Expected number but found " + character + " in line "
-                        + str(self.current_line))
+                     + str(self.current_line))
         elif family == "number":
             sys.exit("ERROR: Constant exceeded bounds. Value must be between " +
-                        "-((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
+                     "-((2^32)-1) and (2^32)-1. line: " + str(self.current_line))
         elif family == "keyword":
             sys.exit("ERROR: Expected string has length greater than allowed (30) in line "
-                         + str(self.current_line))
+                     + str(self.current_line))
         elif family == "assignment":
             sys.exit("ERROR: Expected := but found '" + character + "' in line "
-                        + str(self.current_line))
+                     + str(self.current_line))
         elif family == "comment":
             sys.exit("ERROR: '#' was not closed, line: " + str(self.current_line))
         else:
             sys.exit("ERROR: '" + character + "' does not belong to C-imple. line: "
-                        + str(self.current_line))
+                     + str(self.current_line))
 
     def __is_number(self, character):
         global bool
@@ -111,7 +113,6 @@ class Lex:
                 recognized_string = recognized_string + character
 
     def __is_assignment(self, first_char):
-        recognized_string = ""
         first_character = first_char
         second_character = self.file.read(1)
         recognized_string = first_character + second_character
@@ -122,7 +123,6 @@ class Lex:
             self.__error("assignment", character)
 
     def __is_rel_operator(self, first_char):
-        recognized_string = ""
         character = first_char
         while True:
             if character == "=":
@@ -165,7 +165,7 @@ class Lex:
             else:
                 character = self.file.read(1)
 
-    def __is_comment(self, character):
+    def __is_comment(self):
         character = self.file.read(1)
         while character != "#":
             character = self.file.read(1)
@@ -185,7 +185,7 @@ class Lex:
         # Clear comments and blank characters
         while first_char.isspace() or first_char == "#":
             if first_char == "#":
-                first_char = self.__is_comment(first_char)
+                first_char = self.__is_comment()
             else:
                 first_char = self.__clear_blank_char(first_char)
 
@@ -227,8 +227,8 @@ class Parser:
 
     def __get_token(self):
         lex = self.lexical_analyzer
-        self.file_pointer, token = lex.next_token(self.file_pointer)
-        return token
+        self.file_pointer, next_token = lex.next_token(self.file_pointer)
+        return next_token
 
     def syntax_analyzer(self):
         global token
@@ -244,9 +244,9 @@ class Parser:
     def __error(self, error_code):
 
         error_codes = ["IDTAIL", "FACTOR1", "inputStat", "printStat", "callStat", "returnStat",
-                        "incaseStat", "FORSTAT_)", "SWITCHCASESTAT_)", "WHILESTAT_)", "IFSTAT_)", "subprogram"]
+                       "incaseStat", "FORSTAT_)", "SWITCHCASESTAT_)", "WHILESTAT_)", "IFSTAT_)", "subprogram"]
 
-        case_stat =["FORSTAT_(", "SWITCHCASESTAT_("]
+        case_stat = ["FORSTAT_(", "SWITCHCASESTAT_("]
 
         global token
         lex = self.lexical_analyzer
@@ -322,7 +322,7 @@ class Parser:
 
         elif error_code == "PROGRAM_NAME":
             print("SYNTAX ERROR: The name of the program expected after the keyword 'program' in line" +
-                    str(lex.current_line) + " . The illegal program name '" + token.recognized_string + "' appeared.")
+                  str(lex.current_line) + " . The illegal program name '" + token.recognized_string + "' appeared.")
 
         elif error_code == "BLOCK_}":
             print("SYNTAX ERROR: Expected '}' at the end of the block in line: " + str(lex.current_line))
@@ -463,8 +463,9 @@ class Parser:
             token = self.__get_token()
             self.__statement()
 
-    def __ifStat(self):
+    def __if_stat(self):
         global token
+        if_list = []
         token = self.__get_token()
         if token.recognized_string == "(":
             token = self.__get_token()
@@ -492,29 +493,29 @@ class Parser:
     def __statement(self):
         global token
         if token.recognized_string == "if":
-            self.__ifStat()
+            self.__if_stat()
         elif token.recognized_string == "while":
-            self.__whileStat()
+            self.__while_stat()
         elif token.recognized_string == "switchcase":
-            self.__switchcaseStat()
+            self.__switchcase_stat()
         elif token.recognized_string == "forcase":
-            self.__forcaseStat()
+            self.__forcase_stat()
         elif token.recognized_string == "incase":
-            self.__incaseStat()
+            self.__incase_stat()
         elif token.recognized_string == "call":
-            self.__callStat()
+            self.__call_stat()
         elif token.recognized_string == "return":
-            self.__returnStat()
+            self.__return_stat()
         elif token.recognized_string == "input":
-            self.__inputStat()
+            self.__input_stat()
         elif token.recognized_string == "print":
-            self.__printStat()
+            self.__print_stat()
         elif token.recognized_string[0].isalpha() and \
-             token.recognized_string != "eof" and \
-             not token.recognized_string in group_keyword_list:
-            self.__assignStat()
+                token.recognized_string != "eof" and \
+                token.recognized_string not in group_keyword_list:
+            self.__assign_stat()
 
-    def __assignStat(self):
+    def __assign_stat(self):
         global token
         id_value = self.__idvalue()
         if token.recognized_string == ":=":
@@ -524,7 +525,7 @@ class Parser:
         else:
             self.__error("assignStat")
 
-    def __whileStat(self):
+    def __while_stat(self):
         global token
         token = self.__get_token()
         cond_quad = next_quad()
@@ -542,7 +543,7 @@ class Parser:
         else:
             self.__error("WHILESTAT_(")
 
-    def __switchcaseStat(self):
+    def __switchcase_stat(self):
         global token
         exit_list = empty_list()
         token = self.__get_token()
@@ -570,7 +571,7 @@ class Parser:
         else:
             self.__error("SWITCHCASESTAT_DEFAULT")
 
-    def __forcaseStat(self):
+    def __forcase_stat(self):
         global token
         first_cond_quad = next_quad()
         token = self.__get_token()
@@ -595,7 +596,7 @@ class Parser:
         else:
             self.__error("FORSTAT_DEFAULT")
 
-    def __incaseStat(self):
+    def __incase_stat(self):
         global token
         flag = new_temp()
         first_cond_quad = next_quad()
@@ -619,7 +620,7 @@ class Parser:
                 self.__error("incaseStat")
         gen_quad("=", flag, "1", first_cond_quad)
 
-    def __returnStat(self):
+    def __return_stat(self):
         global token
         token = self.__get_token()
         if token.recognized_string == "(":
@@ -632,7 +633,7 @@ class Parser:
         else:
             self.__error("returnStat")
 
-    def __callStat(self):
+    def __call_stat(self):
         global token
         token = self.__get_token()
         self.__idvalue()
@@ -645,7 +646,7 @@ class Parser:
         else:
             self.__error("callStat")
 
-    def __printStat(self):
+    def __print_stat(self):
         global token
         token = self.__get_token()
         if token.recognized_string == "(":
@@ -658,7 +659,7 @@ class Parser:
         else:
             self.__error("printStat")
 
-    def __inputStat(self):
+    def __input_stat(self):
         global token
         token = self.__get_token()
         if token.recognized_string == "(":
@@ -715,6 +716,8 @@ class Parser:
 
     def __boolfactor(self):
         global token
+        r_true = []
+        r_false = []
         if token.recognized_string == "not":
             token = self.__get_token()
             if token.recognized_string == "[":
@@ -743,7 +746,7 @@ class Parser:
 
     def __expression(self):
         global token
-        sign = self.__optionalSign()
+        sign = self.__optional_sign()
         term_1 = self.__term()
         if sign is not None:
             temp_var = new_temp()
@@ -806,7 +809,7 @@ class Parser:
             token = self.__get_token()
             return temp_var
 
-    def __optionalSign(self):
+    def __optional_sign(self):
         global token
         if token.recognized_string == "+" or \
                 token.recognized_string == "-":
@@ -911,7 +914,7 @@ class Parameter(Entity):
 
 class TempVariable(Entity):
     def __init__(self, name, offset):
-        super.__init__(name, "TempVariable")
+        super().__init__(name, "TempVariable")
         self.offset = offset
 
 
@@ -922,9 +925,9 @@ class Scope:
 
 
 class Argument:
-    def __init__(self, par_mode, type):
+    def __init__(self, par_mode, type_of_arg):
         self.par_mode = par_mode
-        self.type = type
+        self.type_of_arg = type_of_arg
 
 
 def gen_quad(operator, operand1, operand2, operand3):
@@ -975,8 +978,8 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("ERROR: Usage $python met.py <inputfile>")
 
-    #print(sys.argv[1].split("."))
-    #if (sys.argv[1].split(".")[2] != "ci"):
+    # print(sys.argv[1].split("."))
+    # if (sys.argv[1].split(".")[2] != "ci"):
     #    sys.exit("ERROR: Compiler accepts only '.ci' files")
 
     # ------------------------------- Phase 1 main
