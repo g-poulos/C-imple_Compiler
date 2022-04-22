@@ -876,38 +876,42 @@ class Quad:
         self.operand3 = operand
 
 
-class Variable:
-    def __init__(self, name, type, offset):
+class Entity:
+    def __init__(self, name, type_of_entity):
         self.name = name
-        self.type = type
+        self.type_of_entity = type_of_entity
+
+
+class Variable(Entity):
+    def __init__(self, name, type_of_var, offset):
+        super().__init__(name, type_of_var)
         self.offset = offset
 
 
-class Function:
-    def __init__(self, name, type, start_quad, list_argument, frame_length):
-        self.name = name
-        self.type = type
+class Function(Entity):
+    def __init__(self, name, type_of_func, start_quad, list_argument, frame_length):
+        super().__init__(name, type_of_func)
         self.start_quad = start_quad
         self.list_argument = list_argument
         self.frame_length = frame_length
 
 
-class Constant:
+class Constant(Entity):
     def __init__(self, name, value):
-        self.name = name
+        super().__init__(name, "Constant")
         self.value = value
 
 
-class Parameter:
+class Parameter(Entity):
     def __init__(self, name, par_mode, offset):
-        self.name = name
+        super().__init__(name, "Parameter")
         self.par_mode = par_mode
         self.offset = offset
 
 
-class TempVariable:
+class TempVariable(Entity):
     def __init__(self, name, offset):
-        self.name = name
+        super.__init__(name, "TempVariable")
         self.offset = offset
 
 
