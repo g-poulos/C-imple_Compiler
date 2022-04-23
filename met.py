@@ -17,6 +17,7 @@ temp_var_number = 0
 quad_list = []
 
 scope_list = []
+global_nesting_level = 0
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -364,6 +365,8 @@ class Parser:
     def __block(self, block_name):
         global token
         if token.recognized_string == "{":
+            add_scope(global_nesting_level)
+            print_scope_list()
             token = self.__get_token()
             self.__declarations()
             self.__subprograms()
@@ -373,6 +376,7 @@ class Parser:
                 gen_quad("halt", "_", "_", "_")
             gen_quad("end_block", block_name, "_", "_")
             if token.recognized_string == "}":
+                delete_scope()
                 token = self.__get_token()
             else:
                 self.__error("BLOCK_}")
@@ -392,10 +396,12 @@ class Parser:
     def __varlist(self):
         global token
         if token.recognized_string[0].isalpha():
-            self.__idvalue()
+            value = self.__idvalue()
+            add_entity(Variable(value, "Variable", 0))
             while token.recognized_string == ",":
                 token = self.__get_token()
-                self.__idvalue()
+                value = self.__idvalue()
+                add_entity(Variable(value, "Variable", 0))
 
     def __subprograms(self):
         global token
@@ -884,11 +890,17 @@ class Entity:
         self.name = name
         self.type_of_entity = type_of_entity
 
+    def __str__(self):
+        return f"{self.name}: {self.type_of_entity}"
+
 
 class Variable(Entity):
     def __init__(self, name, type_of_var, offset):
         super().__init__(name, type_of_var)
         self.offset = offset
+
+    def __str__(self):
+        return f"{self.name}: {self.type_of_entity} {self.offset}"
 
 
 class Function(Entity):
@@ -919,9 +931,15 @@ class TempVariable(Entity):
 
 
 class Scope:
-    def __init__(self, list_entity, nesting_level):
-        self.list_entity = list_entity
+    def __init__(self, entity_list, nesting_level):
+        self.entity_list = entity_list
         self.nesting_level = nesting_level
+
+    def __str__(self):
+        return f"{str(self.nesting_level)}:[{str(len(self.entity_list))}]"
+
+    def add_entity(self, entity):
+        self.entity_list.append(entity)
 
 
 class Argument:
@@ -974,6 +992,31 @@ def print_quads():
         print(quad.__str__())
 
 
+def add_scope(nesting_level):
+    global global_nesting_level
+    scope = Scope([], nesting_level)
+    global_nesting_level = global_nesting_level + 1
+    scope_list.append(scope)
+
+
+def delete_scope():
+    global global_nesting_level
+    global_nesting_level = global_nesting_level - 1
+    del scope_list[len(scope_list)-1]
+
+
+def print_scope_list():
+    print("---------| SCOPE LIST |---------")
+    for scope in scope_list:
+        print(scope.__str__())
+        for entity in scope.entity_list:
+            print(entity.__str__())
+
+
+def add_entity(entity):
+    scope_list[len(scope_list)-1].add_entity(entity)
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit("ERROR: Usage $python met.py <inputfile>")
@@ -989,6 +1032,7 @@ def main():
     parser_obj.syntax_analyzer()
 
     print_quads()
+    print_scope_list()
 
     # -------------------------------
 
@@ -997,18 +1041,6 @@ def main():
     #     fp, token = lex_object.next_token(fp)
     #     if token.recognized_string == "eof":
     #          break
-
-    # print(gen_quad("+", "_", "_", "_").__str__())
-
-    # x1 = make_list(next_quad())
-    # gen_quad("jump", "_", "_", "_")
-    # gen_quad("+", "a", "1", "a")
-    # x2 = make_list(next_quad())
-    # gen_quad("jump", "_", "_", "_")
-    # x = merge_list(x1, x2)
-    # gen_quad("+", "a", "2", "a")
-    # backpatch(x, next_quad())
-    # print_quads()
 
 
 if __name__ == "__main__":
