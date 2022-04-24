@@ -1,6 +1,7 @@
 import unittest
 from colorama import Fore
 from met import *
+import os
 
 program_pairs = [["tests/intermediate/intermediate_test_1.ci", "tests/intermediate/expected/inde_expected_1.txt"],
                  ["tests/intermediate/intermediate_test_2.ci", "tests/intermediate/expected/inde_expected_2.txt"],
@@ -39,6 +40,21 @@ class QuadTester(unittest.TestCase):
             self.assertEqual(str(expected_quad), str(quad))
         reset_global_variables()
         print(Fore.GREEN + "DONE\n")
+
+    def test_complete_programs(self):
+        directory = "tests/complete_programs"
+        program_list = os.listdir(directory)
+        program_count = 1
+        for program_file in program_list:
+            print(Fore.CYAN + "Processing " + program_file + "...")
+            lex_object = Lex(1, directory + "/" + program_file, None)
+            parser_obj = Parser(lex_object)
+            parser_obj.syntax_analyzer()
+            reset_global_variables()
+            print(Fore.GREEN + f"DONE\n [{program_count}/{len(program_list)}]")
+            program_count = program_count + 1
+
+
 
 
 

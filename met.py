@@ -2,6 +2,7 @@
 # Poulos Grigorios, 4480, cse84480
 
 import sys
+PRINT_SCOPE_LIST = False
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
@@ -16,8 +17,11 @@ quad_number = 1
 temp_var_number = 0
 quad_list = []
 
+# Symbol Table variables
 scope_list = []
 global_nesting_level = 0
+variable_offset = 12
+current_scope_function = None
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -162,6 +166,9 @@ class Lex:
                 return character
             elif character == "\n":
                 self.current_line = self.current_line + 1
+                # For every line o f the program print scope list
+                if PRINT_SCOPE_LIST:
+                    print_scope_list()
                 character = self.file.read(1)
             else:
                 character = self.file.read(1)
@@ -340,15 +347,16 @@ class Parser:
         sys.exit(1)
 
     def __program(self):
-        global token
-        global program_name
+        global token, program_name
 
         if token.recognized_string == "program":
             token = self.__get_token()
             if token.family == "identifier":
                 program_name = token.recognized_string
+                add_scope()
                 token = self.__get_token()
                 self.__block(program_name)
+                delete_scope()
                 if token.recognized_string == ".":
                     token = self.__get_token()
                     if token.recognized_string == "eof":
@@ -365,18 +373,19 @@ class Parser:
     def __block(self, block_name):
         global token
         if token.recognized_string == "{":
-            add_scope(global_nesting_level)
-            print_scope_list()
             token = self.__get_token()
             self.__declarations()
             self.__subprograms()
+
             gen_quad("begin_block", block_name, "_", "_")
+            if block_name != program_name:
+                current_scope_function.start_quad = quad_number
             self.__blockstatements()
+
             if block_name == program_name:
                 gen_quad("halt", "_", "_", "_")
             gen_quad("end_block", block_name, "_", "_")
             if token.recognized_string == "}":
-                delete_scope()
                 token = self.__get_token()
             else:
                 self.__error("BLOCK_}")
@@ -394,14 +403,16 @@ class Parser:
                 self.__error("declaration")
 
     def __varlist(self):
-        global token
+        global token, variable_offset
         if token.recognized_string[0].isalpha():
             value = self.__idvalue()
-            add_entity(Variable(value, "Variable", 0))
+            add_entity(Variable(value, "Variable", variable_offset))
+            variable_offset = variable_offset + 4
             while token.recognized_string == ",":
                 token = self.__get_token()
                 value = self.__idvalue()
-                add_entity(Variable(value, "Variable", 0))
+                add_entity(Variable(value, "Variable", variable_offset))
+                variable_offset = variable_offset + 4
 
     def __subprograms(self):
         global token
@@ -410,17 +421,22 @@ class Parser:
             self.__subprogram()
 
     def __subprogram(self):
-        global token
+        global token, current_scope_function
         if token.recognized_string == "function" or \
                 token.recognized_string == "procedure":
             token = self.__get_token()
             block_name = self.__idvalue()
+            func = Function(block_name, "Function", None, None, None)
+            current_scope_function = func
+            add_entity(func)
+            add_scope()
             if token.recognized_string == "(":
                 token = self.__get_token()
                 self.__formalparlist()
                 if token.recognized_string == ")":
                     token = self.__get_token()
                     self.__block(block_name)
+                    delete_scope()
                 else:
                     self.__error("subprogram")
 
@@ -436,12 +452,15 @@ class Parser:
 
     def __formalparitem(self):
         global token
-        if token.recognized_string == "in":
+        par_mode = token.recognized_string
+        par_list = []
+        if par_mode == "in" or par_mode == "inout":
             token = self.__get_token()
-            self.__idvalue()
-        elif token.recognized_string == "inout":
-            token = self.__get_token()
-            self.__idvalue()
+            par_name = self.__idvalue()
+            par = Parameter(par_name, par_mode, variable_offset)
+            add_entity(par)
+            par_list.append(par)
+        return par_list
 
     def __statements(self):
         global token
@@ -693,7 +712,9 @@ class Parser:
         global token
         if token.recognized_string == "in":
             token = self.__get_token()
-            return self.__expression(), "CV"
+            term = self.__expression()
+            # add_entity(Parameter(term, "cv", variable_offset))
+            return term, "CV"
         elif token.recognized_string == "inout":
             token = self.__get_token()
             return self.__idvalue(), "REF"
@@ -900,7 +921,7 @@ class Variable(Entity):
         self.offset = offset
 
     def __str__(self):
-        return f"{self.name}: {self.type_of_entity} {self.offset}"
+        return f"{self.name}/{self.offset}"
 
 
 class Function(Entity):
@@ -909,6 +930,9 @@ class Function(Entity):
         self.start_quad = start_quad
         self.list_argument = list_argument
         self.frame_length = frame_length
+
+    def __str__(self):
+        return f"{self.name}/{self.start_quad}/{self.frame_length}"
 
 
 class Constant(Entity):
@@ -922,6 +946,9 @@ class Parameter(Entity):
         super().__init__(name, "Parameter")
         self.par_mode = par_mode
         self.offset = offset
+
+    def __str__(self):
+        return f"{self.name}/{self.par_mode}/{self.offset}"
 
 
 class TempVariable(Entity):
@@ -992,9 +1019,9 @@ def print_quads():
         print(quad.__str__())
 
 
-def add_scope(nesting_level):
+def add_scope():
     global global_nesting_level
-    scope = Scope([], nesting_level)
+    scope = Scope([], global_nesting_level)
     global_nesting_level = global_nesting_level + 1
     scope_list.append(scope)
 
@@ -1006,11 +1033,12 @@ def delete_scope():
 
 
 def print_scope_list():
-    print("---------| SCOPE LIST |---------")
-    for scope in scope_list:
-        print(scope.__str__())
+    print("\n---------| SCOPE LIST |---------")
+    for scope in reversed(scope_list):
+        print(scope.__str__(), end="")
         for entity in scope.entity_list:
-            print(entity.__str__())
+            print(" -- " + entity.__str__(), end="")
+        print()
 
 
 def add_entity(entity):
