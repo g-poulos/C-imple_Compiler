@@ -2,7 +2,8 @@
 # Poulos Grigorios, 4480, cse84480
 
 import sys
-PRINT_SCOPE_LIST = False
+PRINT_SCOPE_LIST = True
+DEFAULT_VARIABLE_OFFSET = 12
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
@@ -20,7 +21,7 @@ quad_list = []
 # Symbol Table variables
 scope_list = []
 global_nesting_level = 0
-variable_offset = 12
+variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_function = None
 
 
@@ -407,12 +408,10 @@ class Parser:
         if token.recognized_string[0].isalpha():
             value = self.__idvalue()
             add_entity(Variable(value, "Variable", variable_offset))
-            variable_offset = variable_offset + 4
             while token.recognized_string == ",":
                 token = self.__get_token()
                 value = self.__idvalue()
                 add_entity(Variable(value, "Variable", variable_offset))
-                variable_offset = variable_offset + 4
 
     def __subprograms(self):
         global token
@@ -436,6 +435,7 @@ class Parser:
                 if token.recognized_string == ")":
                     token = self.__get_token()
                     self.__block(block_name)
+                    current_scope_function.frame_length = variable_offset  # TODO: How to calculate
                     delete_scope()
                 else:
                     self.__error("subprogram")
@@ -452,15 +452,23 @@ class Parser:
 
     def __formalparitem(self):
         global token
-        par_mode = token.recognized_string
-        par_list = []
-        if par_mode == "in" or par_mode == "inout":
+        argument_list = []
+        par_mode = -1
+        par_name = -1
+        arg_mode = token.recognized_string
+        if token.recognized_string == "in":
             token = self.__get_token()
             par_name = self.__idvalue()
-            par = Parameter(par_name, par_mode, variable_offset)
-            add_entity(par)
-            par_list.append(par)
-        return par_list
+            par_mode = "cv"
+        elif token.recognized_string == "inout":
+            token = self.__get_token()
+            par_name = self.__idvalue()
+            par_mode = "ref"
+        parameter = Parameter(par_name, par_mode, variable_offset)
+        argument = Argument(arg_mode, "int")  # TODO: Type of argument?
+        add_entity(parameter)
+        argument_list.append(argument)
+        current_scope_function.argument_list = argument_list
 
     def __statements(self):
         global token
@@ -713,7 +721,6 @@ class Parser:
         if token.recognized_string == "in":
             token = self.__get_token()
             term = self.__expression()
-            # add_entity(Parameter(term, "cv", variable_offset))
             return term, "CV"
         elif token.recognized_string == "inout":
             token = self.__get_token()
@@ -925,14 +932,18 @@ class Variable(Entity):
 
 
 class Function(Entity):
-    def __init__(self, name, type_of_func, start_quad, list_argument, frame_length):
+    def __init__(self, name, type_of_func, start_quad, argument_list, frame_length):
         super().__init__(name, type_of_func)
         self.start_quad = start_quad
-        self.list_argument = list_argument
+        self.argument_list = argument_list
         self.frame_length = frame_length
 
     def __str__(self):
-        return f"{self.name}/{self.start_quad}/{self.frame_length}"
+        argument_list_str = ""
+        if self.argument_list is not empty_list():
+            for argument in self.argument_list:
+                argument_list_str = argument_list_str + " " + argument.par_mode
+        return f"{self.name}/{self.start_quad}/{self.frame_length} [{argument_list_str}]"
 
 
 class Constant(Entity):
@@ -955,6 +966,9 @@ class TempVariable(Entity):
     def __init__(self, name, offset):
         super().__init__(name, "TempVariable")
         self.offset = offset
+
+    def __str__(self):
+        return f"{self.name}/{self.offset}"
 
 
 class Scope:
@@ -992,6 +1006,7 @@ def new_temp():
     global temp_var_number
     new_temp_variable = "T_" + str(temp_var_number)
     temp_var_number = temp_var_number + 1
+    add_entity(TempVariable(new_temp_variable, variable_offset))
     return new_temp_variable
 
 
@@ -1020,7 +1035,8 @@ def print_quads():
 
 
 def add_scope():
-    global global_nesting_level
+    global global_nesting_level, variable_offset
+    variable_offset = DEFAULT_VARIABLE_OFFSET
     scope = Scope([], global_nesting_level)
     global_nesting_level = global_nesting_level + 1
     scope_list.append(scope)
@@ -1042,6 +1058,9 @@ def print_scope_list():
 
 
 def add_entity(entity):
+    global variable_offset
+    if entity.type_of_entity != "Function":
+        variable_offset = variable_offset + 4
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
