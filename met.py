@@ -1,6 +1,7 @@
 # Dimitropoulos Dimitrios, 4352, cse84352
 # Poulos Grigorios, 4480, cse84480
 
+import sys, os
 import sys
 PRINT_SCOPE_LIST = True
 DEFAULT_VARIABLE_OFFSET = 12
@@ -24,6 +25,11 @@ global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_function = None
 
+if os.path.exists("test.int"):
+  os.remove("test.int")
+
+f_int = open("test.int", "a")
+f_c = open("test.c", "a")
 
 def reset_global_variables():  # Resets global variables for testing
     global program_name, quad_number, temp_var_number
@@ -1033,6 +1039,10 @@ def print_quads():
     for quad in quad_list:
         print(quad.__str__())
 
+def write_quads():
+    for quad in quad_list:
+        f_int.write(quad.__str__() + "\n")
+    f_int.close()
 
 def add_scope():
     global global_nesting_level, variable_offset
@@ -1080,6 +1090,7 @@ def main():
 
     print_quads()
     print_scope_list()
+    write_quads()
 
     # -------------------------------
 
@@ -1088,6 +1099,18 @@ def main():
     #     fp, token = lex_object.next_token(fp)
     #     if token.recognized_string == "eof":
     #          break
+
+    # print(gen_quad("+", "_", "_", "_").__str__())
+
+    # x1 = make_list(next_quad())
+    # gen_quad("jump", "_", "_", "_")
+    # gen_quad("+", "a", "1", "a")
+    # x2 = make_list(next_quad())
+    # gen_quad("jump", "_", "_", "_")
+    # x = merge_list(x1, x2)
+    # gen_quad("+", "a", "2", "a")
+    # backpatch(x, next_quad())
+    # print_quads()
 
 
 if __name__ == "__main__":
