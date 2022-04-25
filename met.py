@@ -2,13 +2,13 @@
 # Poulos Grigorios, 4480, cse84480
 
 import sys, os
-import sys
 PRINT_SCOPE_LIST = True
 DEFAULT_VARIABLE_OFFSET = 12
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimeter_list = [",", ";", "."]
 operator_list = ["+", "-", "*", "/"]
+rel_op_list = ["=", "<=", ">=", ">", "<", "<>"]
 
 group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "input", "declare", "else", "forcase", "and", "procedure",
@@ -18,6 +18,7 @@ program_name = ""
 quad_number = 1
 temp_var_number = 0
 quad_list = []
+c_default = "#include <stdio.h> \n\nint main() \n{"
 
 # Symbol Table variables
 scope_list = []
@@ -28,8 +29,14 @@ current_scope_function = None
 if os.path.exists("test.int"):
   os.remove("test.int")
 
+if os.path.exists("test.c"):
+  os.remove("test.c")
+
+
 f_int = open("test.int", "a")
+
 f_c = open("test.c", "a")
+f_c.write(c_default)
 
 def reset_global_variables():  # Resets global variables for testing
     global program_name, quad_number, temp_var_number
@@ -858,7 +865,6 @@ class Parser:
     def __reloperator(self):
         global token
         operator = token.recognized_string
-        rel_op_list = ["=", "<=", ">=", ">", "<", "<>"]
         if operator not in rel_op_list:
             self.__error("EXPECTED REL_OP")
         token = self.__get_token()
@@ -1039,10 +1045,32 @@ def print_quads():
     for quad in quad_list:
         print(quad.__str__())
 
-def write_quads():
+def convert_int():
     for quad in quad_list:
         f_int.write(quad.__str__() + "\n")
     f_int.close()
+
+def convert_c():
+    for quad in quad_list:
+        f_c.write("\nL_" + str(quad.quad_label) + ": ")
+        if str(quad.operator) in operator_list:
+            f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + " " +  str(quad.operator) + " " + str(quad.operand2) + ";")
+        elif str(quad.operator) == "jump":
+            f_c.write("goto " + "L_" + str(quad.operand3) + ";")
+        elif str(quad.operator) == ":=":
+            f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + ";")
+        elif str(quad.operator) in rel_op_list:
+            if str(quad.operator) == "=":
+                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) + str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
+            else:
+                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
+        elif str(quad.operator) == "halt":
+            f_c.write("return 0;")
+
+    f_c.write("\n}")
+    f_c.close()
+
+
 
 def add_scope():
     global global_nesting_level, variable_offset
@@ -1090,27 +1118,8 @@ def main():
 
     print_quads()
     print_scope_list()
-    write_quads()
-
-    # -------------------------------
-
-    # fp = 0
-    # while True:
-    #     fp, token = lex_object.next_token(fp)
-    #     if token.recognized_string == "eof":
-    #          break
-
-    # print(gen_quad("+", "_", "_", "_").__str__())
-
-    # x1 = make_list(next_quad())
-    # gen_quad("jump", "_", "_", "_")
-    # gen_quad("+", "a", "1", "a")
-    # x2 = make_list(next_quad())
-    # gen_quad("jump", "_", "_", "_")
-    # x = merge_list(x1, x2)
-    # gen_quad("+", "a", "2", "a")
-    # backpatch(x, next_quad())
-    # print_quads()
+    convert_int()
+    convert_c()
 
 
 if __name__ == "__main__":
