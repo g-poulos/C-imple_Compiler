@@ -1,13 +1,13 @@
 # Dimitropoulos Dimitrios, 4352, cse84352
 # Poulos Grigorios, 4480, cse84480
 
-import sys, os
+import os
 import sys
 PRINT_SCOPE_LIST = True
 DEFAULT_VARIABLE_OFFSET = 12
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
-delimeter_list = [",", ";", "."]
+delimiter_list = [",", ";", "."]
 operator_list = ["+", "-", "*", "/"]
 
 group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
@@ -22,14 +22,14 @@ quad_list = []
 # Symbol Table variables
 scope_list = []
 global_nesting_level = 0
-variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_function = None
 
 if os.path.exists("test.int"):
-  os.remove("test.int")
+    os.remove("test.int")
 
 f_int = open("test.int", "a")
 f_c = open("test.c", "a")
+
 
 def reset_global_variables():  # Resets global variables for testing
     global program_name, quad_number, temp_var_number
@@ -164,8 +164,8 @@ class Lex:
             return character, "mulOperator"
         elif character in group_symbol_list:
             return character, "groupSymbol"
-        elif character in delimeter_list:
-            return character, "delimeter"
+        elif character in delimiter_list:
+            return character, "delimiter"
 
     def __clear_blank_char(self, character):
         while True:
@@ -216,7 +216,7 @@ class Lex:
             recognized_string, family = self.__is_assignment(first_char)
         elif first_char == ">" or first_char == "<" or first_char == "=":
             recognized_string, family = self.__is_rel_operator(first_char)
-        elif first_char in group_symbol_list or first_char in delimeter_list or first_char in operator_list:
+        elif first_char in group_symbol_list or first_char in delimiter_list or first_char in operator_list:
             recognized_string, family = self.__is_single_char(first_char)
         else:
             if first_char == "":
@@ -410,14 +410,14 @@ class Parser:
                 self.__error("declaration")
 
     def __varlist(self):
-        global token, variable_offset
+        global token
         if token.recognized_string[0].isalpha():
             value = self.__idvalue()
-            add_entity(Variable(value, "Variable", variable_offset))
+            add_entity(Variable(value, "Variable", scope_list[-1].variable_offset))
             while token.recognized_string == ",":
                 token = self.__get_token()
                 value = self.__idvalue()
-                add_entity(Variable(value, "Variable", variable_offset))
+                add_entity(Variable(value, "Variable", scope_list[-1].variable_offset))
 
     def __subprograms(self):
         global token
@@ -441,7 +441,7 @@ class Parser:
                 if token.recognized_string == ")":
                     token = self.__get_token()
                     self.__block(block_name)
-                    current_scope_function.frame_length = variable_offset  # TODO: How to calculate
+                    current_scope_function.frame_length = scope_list[-1].variable_offset  # TODO: How to calculate
                     delete_scope()
                 else:
                     self.__error("subprogram")
@@ -470,7 +470,7 @@ class Parser:
             token = self.__get_token()
             par_name = self.__idvalue()
             par_mode = "ref"
-        parameter = Parameter(par_name, par_mode, variable_offset)
+        parameter = Parameter(par_name, par_mode, scope_list[-1].variable_offset)
         argument = Argument(arg_mode, "int")  # TODO: Type of argument?
         add_entity(parameter)
         argument_list.append(argument)
@@ -981,6 +981,7 @@ class Scope:
     def __init__(self, entity_list, nesting_level):
         self.entity_list = entity_list
         self.nesting_level = nesting_level
+        self.variable_offset = DEFAULT_VARIABLE_OFFSET
 
     def __str__(self):
         return f"{str(self.nesting_level)}:[{str(len(self.entity_list))}]"
@@ -1010,9 +1011,10 @@ def next_quad():
 
 def new_temp():
     global temp_var_number
+
     new_temp_variable = "T_" + str(temp_var_number)
     temp_var_number = temp_var_number + 1
-    add_entity(TempVariable(new_temp_variable, variable_offset))
+    add_entity(TempVariable(new_temp_variable, scope_list[-1].variable_offset))
     return new_temp_variable
 
 
@@ -1037,16 +1039,17 @@ def backpatch(list, label):
 def print_quads():
     print("---------| QUADS |---------")
     for quad in quad_list:
-        print(quad.__str__())
+        print(quad)
+
 
 def write_quads():
     for quad in quad_list:
         f_int.write(quad.__str__() + "\n")
     f_int.close()
 
+
 def add_scope():
-    global global_nesting_level, variable_offset
-    variable_offset = DEFAULT_VARIABLE_OFFSET
+    global global_nesting_level
     scope = Scope([], global_nesting_level)
     global_nesting_level = global_nesting_level + 1
     scope_list.append(scope)
@@ -1061,16 +1064,16 @@ def delete_scope():
 def print_scope_list():
     print("\n---------| SCOPE LIST |---------")
     for scope in reversed(scope_list):
-        print(scope.__str__(), end="")
+        print(scope, end="")
         for entity in scope.entity_list:
             print(" -- " + entity.__str__(), end="")
         print()
 
 
+
 def add_entity(entity):
-    global variable_offset
     if entity.type_of_entity != "Function":
-        variable_offset = variable_offset + 4
+        scope_list[-1].variable_offset = scope_list[-1].variable_offset + 4
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
@@ -1085,7 +1088,6 @@ def main():
     # ------------------------------- Phase 1 main
     lex_object = Lex(1, sys.argv[1], None)
     parser_obj = Parser(lex_object)
-
     parser_obj.syntax_analyzer()
 
     print_quads()
