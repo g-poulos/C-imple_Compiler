@@ -28,16 +28,17 @@ scope_list = []
 global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_functions = []
-sb_file = None
+sb_file_str = ""
 
 
 def reset_global_variables():  # Resets global variables for testing
-    global program_name, quad_number, temp_var_number, FILE_NAME
+    global program_name, quad_number, temp_var_number, FILE_NAME, sb_file_str
     FILE_NAME = None
     program_name = ""
     quad_number = 1
     temp_var_number = 0
     quad_list.clear()
+    sb_file_str = ""
 
 
 class Token:
@@ -180,7 +181,7 @@ class Lex:
                 # For every line o f the program print scope list
                 if PRINT_SCOPE_LIST:
                     print_scope_list()
-                write_symbol_table_file()
+                save_symbol_table()
 
                 character = self.file.read(1)
             else:
@@ -252,19 +253,11 @@ class Parser:
         return next_token
 
     def syntax_analyzer(self):
-        global token, sb_file
-
-        # Generating the symbol table file
-        sb_file_name = FILE_NAME + ".symb"
-        if os.path.exists(sb_file_name):
-            os.remove(sb_file_name)
-        sb_file = open(sb_file_name, "a")
-
+        global token
         token = self.__get_token()
         self.__program()
 
         self.lexical_analyzer.get_file().close()
-        sb_file.close()
         print("Compilation successfully completed")
 
         # For testing only
@@ -378,7 +371,7 @@ class Parser:
                 add_scope()
                 token = self.__get_token()
                 self.__block(program_name)
-                write_symbol_table_file()
+                save_symbol_table()
                 delete_scope()
                 if token.recognized_string == ".":
                     token = self.__get_token()
@@ -1148,14 +1141,25 @@ def find_in_scope(entity_name):
     return False
 
 
-def write_symbol_table_file():
-    sb_file.write("+---------------------------------------+\n")
+def save_symbol_table():
+    global sb_file_str
+    sb_file_str = sb_file_str + "+---------------------------------------+\n"
     for scope in reversed(scope_list):
-        sb_file.write(scope.__str__())
+        sb_file_str = sb_file_str + scope.__str__()
         for entity in scope.entity_list:
-            sb_file.write(" -- " + entity.__str__())
-        sb_file.write("\n")
-    sb_file.write("\n")
+            sb_file_str = sb_file_str + " -- " + entity.__str__()
+        sb_file_str = sb_file_str + "\n"
+    sb_file_str = sb_file_str + "\n"
+
+
+def write_sb_file():
+    # Generating the symbol table file
+    sb_file_name = FILE_NAME + ".symb"
+    if os.path.exists(sb_file_name):
+        os.remove(sb_file_name)
+    sb_file = open(sb_file_name, "a")
+    sb_file.write(sb_file_str)
+    sb_file.close()
 
 
 def print_scope_list():
@@ -1186,6 +1190,7 @@ def main():
     parser_obj.syntax_analyzer()
 
     print_quads()
+    write_sb_file()
     convert_int()
     convert_c()
 
