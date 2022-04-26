@@ -6,6 +6,7 @@ import sys
 
 PRINT_SCOPE_LIST = True
 DEFAULT_VARIABLE_OFFSET = 12
+FILE_NAME = None
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimiter_list = [",", ";", "."]
@@ -27,10 +28,12 @@ scope_list = []
 global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_functions = []
+sb_file = None
 
 
 def reset_global_variables():  # Resets global variables for testing
-    global program_name, quad_number, temp_var_number
+    global program_name, quad_number, temp_var_number, FILE_NAME
+    FILE_NAME = None
     program_name = ""
     quad_number = 1
     temp_var_number = 0
@@ -56,10 +59,12 @@ class Lex:
     file = None
 
     def __init__(self, current_line, file_name, first_token):
+        global FILE_NAME
         self.current_line = current_line
         self.file_name = file_name
         self.token = first_token
 
+        FILE_NAME = file_name.split("\\")[-1].split(".")[0]
         self.file = open(self.file_name, "r")
 
     def get_file(self):
@@ -171,9 +176,12 @@ class Lex:
                 return character
             elif character == "\n":
                 self.current_line = self.current_line + 1
+
                 # For every line o f the program print scope list
                 if PRINT_SCOPE_LIST:
                     print_scope_list()
+                write_symbol_table_file()
+
                 character = self.file.read(1)
             else:
                 character = self.file.read(1)
@@ -244,10 +252,19 @@ class Parser:
         return next_token
 
     def syntax_analyzer(self):
-        global token
+        global token, sb_file
+
+        # Generating the symbol table file
+        sb_file_name = FILE_NAME + ".symb"
+        if os.path.exists(sb_file_name):
+            os.remove(sb_file_name)
+        sb_file = open(sb_file_name, "a")
+
         token = self.__get_token()
         self.__program()
+
         self.lexical_analyzer.get_file().close()
+        sb_file.close()
         print("Compilation successfully completed")
 
         # For testing only
@@ -361,6 +378,7 @@ class Parser:
                 add_scope()
                 token = self.__get_token()
                 self.__block(program_name)
+                write_symbol_table_file()
                 delete_scope()
                 if token.recognized_string == ".":
                     token = self.__get_token()
@@ -1039,9 +1057,10 @@ def print_quads():
 
 
 def convert_int():
-    if os.path.exists("test.int"):
-        os.remove("test.int")
-    f_int = open("test.int", "a")
+    int_file_name = FILE_NAME + ".int"
+    if os.path.exists(int_file_name):
+        os.remove(int_file_name)
+    f_int = open(int_file_name, "a")
     for quad in quad_list:
         f_int.write(quad.__str__() + "\n")
     f_int.close()
@@ -1049,10 +1068,11 @@ def convert_int():
 
 def convert_c():
     c_default = "#include <stdio.h> \n\nint main() \n{"
-    if os.path.exists("test.c"):
-        os.remove("test.c")
+    c_file_name = FILE_NAME + ".c"
+    if os.path.exists(c_file_name):
+        os.remove(c_file_name)
 
-    f_c = open("test.c", "a")
+    f_c = open(c_file_name, "a")
     f_c.write(c_default)
 
     var = []
@@ -1113,6 +1133,25 @@ def delete_scope():
     del scope_list[len(scope_list)-1]
 
 
+def find_in_scope(entity_name):
+    for scope in reversed(scope_list):
+        for entity in scope.entity_list:
+            if entity.name == entity_name:
+                return entity
+    print("ERROR: Entity not found!")
+    return False
+
+
+def write_symbol_table_file():
+    sb_file.write("+---------------------------------------+\n")
+    for scope in reversed(scope_list):
+        sb_file.write(scope.__str__())
+        for entity in scope.entity_list:
+            sb_file.write(" -- " + entity.__str__())
+        sb_file.write("\n")
+    sb_file.write("\n")
+
+
 def print_scope_list():
     print("\n---------| SCOPE LIST |---------")
     for scope in reversed(scope_list):
@@ -1132,9 +1171,8 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("ERROR: Usage $python met.py <inputfile>")
 
-    # print(sys.argv[1].split("."))
-    # if (sys.argv[1].split(".")[2] != "ci"):
-    #    sys.exit("ERROR: Compiler accepts only '.ci' files")
+    if sys.argv[1].split(".")[-1] != "ci":
+        sys.exit("ERROR: Compiler accepts only '.ci' files")
 
     # ------------------------------- Phase 1 main
     lex_object = Lex(1, sys.argv[1], None)
