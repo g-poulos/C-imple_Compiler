@@ -1067,6 +1067,12 @@ def convert_int():
 
 
 def convert_c():
+    function_vars = ["par", "cv", "ref", "ret", "call"]
+
+    for quad in quad_list:
+        if str(quad.operator).lower() in function_vars:
+            sys.exit("Cannot convert this program to c.")
+
     c_default = "#include <stdio.h> \n\nint main() \n{"
     c_file_name = FILE_NAME + ".c"
     if os.path.exists(c_file_name):
