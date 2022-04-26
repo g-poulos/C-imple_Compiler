@@ -16,6 +16,7 @@ group_keyword_list = ["print", "program", "if", "switchcase", "not", "function",
                       "input", "declare", "else", "forcase", "and", "procedure",
                       "while", "incase", "or", "call", "case", "default",
                       "return", "in", "inout"]
+end_reached = True
 program_name = ""
 quad_number = 1
 temp_var_number = 0
@@ -51,13 +52,13 @@ token = Token(None, None, 1)
 
 
 class Lex:
-    bool = True
+    end_reached = True
     file = None
 
-    def __init__(self, current_line, file_name, token):
+    def __init__(self, current_line, file_name, first_token):
         self.current_line = current_line
         self.file_name = file_name
-        self.token = token
+        self.token = first_token
 
         self.file = open(self.file_name, "r")
 
@@ -84,7 +85,7 @@ class Lex:
                      + str(self.current_line))
 
     def __is_number(self, character):
-        global bool
+        global end_reached
         recognized_string = ""
         while True:
             if character.isnumeric():
@@ -94,7 +95,7 @@ class Lex:
             else:
                 if -(pow(2, 32) - 1) <= int(recognized_string) <= (pow(2, 32) - 1):
                     if character == "":
-                        bool = False
+                        end_reached = False
                     self.file.seek(self.file.tell() - 1)
                     return recognized_string, "number"
                 else:
@@ -102,14 +103,14 @@ class Lex:
             character = self.file.read(1)
 
     def __is_keyword(self, first_char):
-        global bool
+        global end_reached
         recognized_string = first_char
         while True:
             character = self.file.read(1)
             if not character.isnumeric() and not character.isalpha():
                 if len(recognized_string) <= 30:
                     if character == "":
-                        bool = False
+                        end_reached = False
                     self.file.seek(self.file.tell() - 1)
                     # print(character)
                     if recognized_string in group_keyword_list:
@@ -201,7 +202,7 @@ class Lex:
             else:
                 first_char = self.__clear_blank_char(first_char)
 
-        if not bool:
+        if not end_reached:
             first_char = "eof"
             family = "eof"
 
@@ -1025,10 +1026,10 @@ def merge_list(list1, list2):
     return list1 + list2
 
 
-def backpatch(list, label):
-    for i in list:
+def backpatch(unpatched_list, label):
+    for i in unpatched_list:
         quad_list[i-1].set_operand3(label)
-    list.clear()
+    unpatched_list.clear()
 
 
 def print_quads():
@@ -1057,12 +1058,15 @@ def convert_c():
     var = []
 
     for quad in quad_list:
-        if str(quad.operator) == ":=" or  str(quad.operator) in operator_list or str(quad.operator) in rel_op_list:
-            if not str(quad.operand1).isnumeric() and not str(quad.operand1) == "_" : var.append(str(quad.operand1))
+        if str(quad.operator) == ":=" or str(quad.operator) in operator_list or str(quad.operator) in rel_op_list:
+            if not str(quad.operand1).isnumeric() and not str(quad.operand1) == "_":
+                var.append(str(quad.operand1))
 
-            if not str(quad.operand2).isnumeric() and not str(quad.operand2) == "_" : var.append(str(quad.operand2))
+            if not str(quad.operand2).isnumeric() and not str(quad.operand2) == "_":
+                var.append(str(quad.operand2))
 
-            if not str(quad.operand3).isnumeric() and not str(quad.operand3) == "_" : var.append(str(quad.operand3))
+            if not str(quad.operand3).isnumeric() and not str(quad.operand3) == "_":
+                var.append(str(quad.operand3))
 
     var = list(dict.fromkeys(var))
 
@@ -1088,7 +1092,7 @@ def convert_c():
                           str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
             else:
                 f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
-                          " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) +";")
+                          " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
         elif str(quad.operator) == "halt":
             f_c.write("return 0;")
 
