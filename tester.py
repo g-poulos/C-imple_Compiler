@@ -1,5 +1,7 @@
 import unittest
 from colorama import Fore
+
+import met
 from met import *
 import os
 
@@ -45,6 +47,7 @@ class CompilerTester(unittest.TestCase):
         directory = "tests/complete_programs"
         program_list = os.listdir(directory)
         program_count = 1
+        met.PRINT_SCOPE_LIST = False
         for program_file in program_list:
             print(Fore.CYAN + "Processing " + program_file + "...")
             lex_object = Lex(1, directory + "/" + program_file, None)

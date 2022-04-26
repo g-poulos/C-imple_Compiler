@@ -26,7 +26,7 @@ c_default = "#include <stdio.h> \n\nint main() \n{"
 scope_list = []
 global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
-current_scope_function = None
+current_scope_functions = []
 
 if os.path.exists("test.int"):
     os.remove("test.int")
@@ -396,7 +396,7 @@ class Parser:
 
             gen_quad("begin_block", block_name, "_", "_")
             if block_name != program_name:
-                current_scope_function.start_quad = quad_number
+                current_scope_functions[-1].start_quad = quad_number
             self.__blockstatements()
 
             if block_name == program_name:
@@ -436,22 +436,26 @@ class Parser:
             self.__subprogram()
 
     def __subprogram(self):
-        global token, current_scope_function
-        if token.recognized_string == "function" or \
-                token.recognized_string == "procedure":
+        global token, current_scope_functions
+        type_of_subprogram = token.recognized_string
+        if type_of_subprogram == "function" or type_of_subprogram == "procedure":
             token = self.__get_token()
             block_name = self.__idvalue()
-            func = Function(block_name, "Function", None, None, None)
-            current_scope_function = func
+
+            func = Function(block_name, type_of_subprogram, None, None, None)
+            current_scope_functions.append(func)
             add_entity(func)
             add_scope()
+
             if token.recognized_string == "(":
                 token = self.__get_token()
                 self.__formalparlist()
                 if token.recognized_string == ")":
                     token = self.__get_token()
                     self.__block(block_name)
-                    current_scope_function.frame_length = scope_list[-1].variable_offset  # TODO: How to calculate
+
+                    current_scope_functions[-1].frame_length = scope_list[-1].variable_offset  # TODO: How to calculate
+                    current_scope_functions = current_scope_functions[:-1]
                     delete_scope()
                 else:
                     self.__error("subprogram")
@@ -460,7 +464,7 @@ class Parser:
                 self.__error("subprogram")
 
     def __formalparlist(self):
-        global token
+        global token, current_scope_functions
         argument_list = []
         argument = self.__formalparitem()
         argument_list.append(argument)
@@ -468,7 +472,7 @@ class Parser:
             token = self.__get_token()
             argument = self.__formalparitem()
             argument_list.append(argument)
-        current_scope_function.argument_list = argument_list
+        current_scope_functions[-1].argument_list = argument_list
 
     def __formalparitem(self):
         global token
@@ -960,7 +964,7 @@ class Function(Entity):
         if self.argument_list is not empty_list():
             for argument in self.argument_list:
                 argument_list_str = argument_list_str + " " + argument.par_mode
-        return f"{self.name}/{self.start_quad}/{self.frame_length} [{argument_list_str}]"
+        return f"{self.name}/{self.start_quad}/{self.frame_length}[{argument_list_str.strip()}]"
 
 
 class Parameter(Entity):
@@ -1118,7 +1122,6 @@ def main():
     parser_obj.syntax_analyzer()
 
     print_quads()
-    print_scope_list()
     convert_int()
     convert_c()
 
