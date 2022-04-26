@@ -1050,6 +1050,25 @@ def convert_c():
     f_c = open("test.c", "a")
     f_c.write(c_default)
 
+    var = []
+
+    for quad in quad_list:
+        if str(quad.operator) == ":=" or  str(quad.operator) in operator_list or str(quad.operator) in rel_op_list:
+            if not str(quad.operand1).isnumeric() and not str(quad.operand1) == "_" : var.append(str(quad.operand1))
+
+            if not str(quad.operand2).isnumeric() and not str(quad.operand2) == "_" : var.append(str(quad.operand2))
+
+            if not str(quad.operand3).isnumeric() and not str(quad.operand3) == "_" : var.append(str(quad.operand3))
+
+    var = list(dict.fromkeys(var))
+
+    f_c.write("\nint ")
+    for elements in range(len(var)):
+        if elements != len(var)-1:
+            f_c.write(var[elements] + ",")
+        else:
+            f_c.write(var[elements] + ";")
+
     for quad in quad_list:
         f_c.write("\nL_" + str(quad.quad_label) + ": ")
         if str(quad.operator) in operator_list:
@@ -1062,10 +1081,10 @@ def convert_c():
         elif str(quad.operator) in rel_op_list:
             if str(quad.operator) == "=":
                 f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
-                          str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
+                          str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
             else:
                 f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
-                          " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
+                          " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) +";")
         elif str(quad.operator) == "halt":
             f_c.write("return 0;")
 
