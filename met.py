@@ -20,25 +20,12 @@ program_name = ""
 quad_number = 1
 temp_var_number = 0
 quad_list = []
-c_default = "#include <stdio.h> \n\nint main() \n{"
 
 # Symbol Table variables
 scope_list = []
 global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_function = None
-
-if os.path.exists("test.int"):
-    os.remove("test.int")
-
-if os.path.exists("test.c"):
-    os.remove("test.c")
-
-
-f_int = open("test.int", "a")
-
-f_c = open("test.c", "a")
-f_c.write(c_default)
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -1047,12 +1034,22 @@ def print_quads():
 
 
 def convert_int():
+    if os.path.exists("test.int"):
+        os.remove("test.int")
+    f_int = open("test.int", "a")
     for quad in quad_list:
         f_int.write(quad.__str__() + "\n")
     f_int.close()
 
 
 def convert_c():
+    c_default = "#include <stdio.h> \n\nint main() \n{"
+    if os.path.exists("test.c"):
+        os.remove("test.c")
+
+    f_c = open("test.c", "a")
+    f_c.write(c_default)
+
     for quad in quad_list:
         f_c.write("\nL_" + str(quad.quad_label) + ": ")
         if str(quad.operator) in operator_list:
