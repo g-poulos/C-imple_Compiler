@@ -1,0 +1,35 @@
+program symbol
+{
+    declare a, b, c;
+
+    procedure P1(in x, inout y)
+    {
+        declare a;
+
+        function F11(in x)
+        {
+            declare a;
+
+            b:=a;
+            a:=x;
+            c:=F11(in x);
+            return(c);
+        }
+
+        function F21(in x)
+        {
+            c:=F11(in x);
+            return(c);
+        }
+
+        y:=x;
+    }
+
+    procedure P2(inout y)
+    {
+        declare x;
+        y:=A;
+        call P1(in a, inout b);
+        call P2(in c);
+    }
+}.

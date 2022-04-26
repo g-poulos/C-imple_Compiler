@@ -1,7 +1,9 @@
 # Dimitropoulos Dimitrios, 4352, cse84352
 # Poulos Grigorios, 4480, cse84480
 
-import sys, os
+import os
+import sys
+
 PRINT_SCOPE_LIST = True
 DEFAULT_VARIABLE_OFFSET = 12
 
@@ -30,7 +32,7 @@ if os.path.exists("test.int"):
     os.remove("test.int")
 
 if os.path.exists("test.c"):
-  os.remove("test.c")
+    os.remove("test.c")
 
 
 f_int = open("test.int", "a")
@@ -459,14 +461,17 @@ class Parser:
 
     def __formalparlist(self):
         global token
-        self.__formalparitem()
+        argument_list = []
+        argument = self.__formalparitem()
+        argument_list.append(argument)
         while token.recognized_string == ",":
             token = self.__get_token()
-            self.__formalparitem()
+            argument = self.__formalparitem()
+            argument_list.append(argument)
+        current_scope_function.argument_list = argument_list
 
     def __formalparitem(self):
         global token
-        argument_list = []
         par_mode = -1
         par_name = -1
         arg_mode = token.recognized_string
@@ -481,8 +486,7 @@ class Parser:
         parameter = Parameter(par_name, par_mode, scope_list[-1].variable_offset)
         argument = Argument(arg_mode, "int")  # TODO: Type of argument?
         add_entity(parameter)
-        argument_list.append(argument)
-        current_scope_function.argument_list = argument_list
+        return argument
 
     def __statements(self):
         global token
@@ -959,12 +963,6 @@ class Function(Entity):
         return f"{self.name}/{self.start_quad}/{self.frame_length} [{argument_list_str}]"
 
 
-class Constant(Entity):
-    def __init__(self, name, value):
-        super().__init__(name, "Constant")
-        self.value = value
-
-
 class Parameter(Entity):
     def __init__(self, name, par_mode, offset):
         super().__init__(name, "Parameter")
@@ -988,6 +986,7 @@ class Scope:
     def __init__(self, entity_list, nesting_level):
         self.entity_list = entity_list
         self.nesting_level = nesting_level
+        self.variable_offset = DEFAULT_VARIABLE_OFFSET
 
     def __str__(self):
         return f"{str(self.nesting_level)}:[{str(len(self.entity_list))}]"
@@ -1052,27 +1051,29 @@ def convert_int():
         f_int.write(quad.__str__() + "\n")
     f_int.close()
 
+
 def convert_c():
     for quad in quad_list:
         f_c.write("\nL_" + str(quad.quad_label) + ": ")
         if str(quad.operator) in operator_list:
-            f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + " " +  str(quad.operator) + " " + str(quad.operand2) + ";")
+            f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + " " +
+                      str(quad.operator) + " " + str(quad.operand2) + ";")
         elif str(quad.operator) == "jump":
             f_c.write("goto " + "L_" + str(quad.operand3) + ";")
         elif str(quad.operator) == ":=":
             f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + ";")
         elif str(quad.operator) in rel_op_list:
             if str(quad.operator) == "=":
-                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) + str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
+                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
+                          str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
             else:
-                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
+                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
+                          " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3))
         elif str(quad.operator) == "halt":
             f_c.write("return 0;")
 
     f_c.write("\n}")
     f_c.close()
-
-
 
 
 def add_scope():

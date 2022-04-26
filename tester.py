@@ -21,7 +21,7 @@ def file_to_list(filename):
     return file_list
 
 
-class QuadTester(unittest.TestCase):
+class CompilerTester(unittest.TestCase):
 
     def test_quad_programs(self):
         for pair in program_pairs:
