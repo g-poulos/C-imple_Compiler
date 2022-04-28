@@ -1061,62 +1061,67 @@ def convert_int():
 
 def convert_c():
     function_vars = ["par", "cv", "ref", "ret", "call"]
+    flag = 1
 
     for quad in quad_list:
         if str(quad.operator).lower() in function_vars:
-            sys.exit("Cannot convert this program to c.")
+            flag = 0
 
-    c_default = "#include <stdio.h> \n\nint main() \n{"
-    c_file_name = FILE_NAME + ".c"
-    if os.path.exists(c_file_name):
-        os.remove(c_file_name)
+    if flag == 1:
+        c_default = "#include <stdio.h> \n\nint main() \n{"
+        c_file_name = FILE_NAME + ".c"
+        if os.path.exists(c_file_name):
+            os.remove(c_file_name)
 
-    f_c = open(c_file_name, "a")
-    f_c.write(c_default)
+        f_c = open(c_file_name, "a")
+        f_c.write(c_default)
 
-    var = []
+        var = []
 
-    for quad in quad_list:
-        if str(quad.operator) == ":=" or str(quad.operator) in operator_list or str(quad.operator) in rel_op_list:
-            if not str(quad.operand1).isnumeric() and not str(quad.operand1) == "_":
-                var.append(str(quad.operand1))
+        for quad in quad_list:
+            if str(quad.operator) == ":=" or str(quad.operator) in operator_list or str(quad.operator) in rel_op_list:
+                if not str(quad.operand1).isnumeric() and not str(quad.operand1) == "_":
+                    var.append(str(quad.operand1))
 
-            if not str(quad.operand2).isnumeric() and not str(quad.operand2) == "_":
-                var.append(str(quad.operand2))
+                if not str(quad.operand2).isnumeric() and not str(quad.operand2) == "_":
+                    var.append(str(quad.operand2))
 
-            if not str(quad.operand3).isnumeric() and not str(quad.operand3) == "_":
-                var.append(str(quad.operand3))
+                if not str(quad.operand3).isnumeric() and not str(quad.operand3) == "_":
+                    var.append(str(quad.operand3))
 
-    var = list(dict.fromkeys(var))
+        var = list(dict.fromkeys(var))
 
-    f_c.write("\nint ")
-    for elements in range(len(var)):
-        if elements != len(var)-1:
-            f_c.write(var[elements] + ",")
-        else:
-            f_c.write(var[elements] + ";")
-
-    for quad in quad_list:
-        f_c.write("\nL_" + str(quad.quad_label) + ": ")
-        if str(quad.operator) in operator_list:
-            f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + " " +
-                      str(quad.operator) + " " + str(quad.operand2) + ";")
-        elif str(quad.operator) == "jump":
-            f_c.write("goto " + "L_" + str(quad.operand3) + ";")
-        elif str(quad.operator) == ":=":
-            f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + ";")
-        elif str(quad.operator) in rel_op_list:
-            if str(quad.operator) == "=":
-                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
-                          str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
+        f_c.write("\nint ")
+        for elements in range(len(var)):
+            if elements != len(var)-1:
+                f_c.write(var[elements] + ",")
             else:
-                f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
-                          " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
-        elif str(quad.operator) == "halt":
-            f_c.write("return 0;")
+                f_c.write(var[elements] + ";")
 
-    f_c.write("\n}")
-    f_c.close()
+        for quad in quad_list:
+            f_c.write("\nL_" + str(quad.quad_label) + ": ")
+            if str(quad.operator) in operator_list:
+                f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + " " +
+                          str(quad.operator) + " " + str(quad.operand2) + ";")
+            elif str(quad.operator) == "jump":
+                f_c.write("goto " + "L_" + str(quad.operand3) + ";")
+            elif str(quad.operator) == ":=":
+                f_c.write(str(quad.operand3) + " = " + str(quad.operand1) + ";")
+            elif str(quad.operator) in rel_op_list:
+                if str(quad.operator) == "=":
+                    f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
+                              str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
+                else:
+                    f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
+                              " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
+            elif str(quad.operator) == "halt":
+                f_c.write("return 0;")
+
+        f_c.write("\n}")
+        f_c.close()
+
+    else:
+        print("\nThis program cannot be converted to c.\n")
 
 
 def add_scope():
