@@ -1120,9 +1120,9 @@ def convert_c():
             elif str(quad.operator) == "halt":
                 f_c.write("return 0;")
             elif str(quad.operator) == "in":
-                f_c.write('scanf("%d",&' + quad.operand1 + ')')
+                f_c.write('scanf("%d",&' + quad.operand1 + ');')
             elif str(quad.operator) == "out":
-                f_c.write('printf("%d",' + quad.operand1 + ')')
+                f_c.write('printf("%d",' + quad.operand1 + ');')
             elif str(quad.operator) == "end_block":
                 f_c.write("{}")
         f_c.write("\n}")
