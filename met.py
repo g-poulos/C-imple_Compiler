@@ -1082,7 +1082,7 @@ def convert_c():
         var = []
 
         for quad in quad_list:
-            if str(quad.operator) == ":=" or str(quad.operator) in operator_list or str(quad.operator) in rel_op_list:
+            if str(quad.operator) == ":=" or str(quad.operator) in operator_list or str(quad.operator) in rel_op_list or str(quad.operator) == "in":
                 if not str(quad.operand1).isnumeric() and not str(quad.operand1) == "_":
                     var.append(str(quad.operand1))
 
@@ -1119,7 +1119,12 @@ def convert_c():
                               " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
             elif str(quad.operator) == "halt":
                 f_c.write("return 0;")
-
+            elif str(quad.operator) == "in":
+                f_c.write('scanf("%d",&' + quad.operand1 + ')')
+            elif str(quad.operator) == "out":
+                f_c.write('printf("%d",' + quad.operand1 + ')')
+            elif str(quad.operator) == "end_block":
+                f_c.write("{}")
         f_c.write("\n}")
         f_c.close()
 
