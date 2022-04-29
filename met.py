@@ -1114,6 +1114,9 @@ def convert_c():
                 if str(quad.operator) == "=":
                     f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
                               str(quad.operator) + " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
+                elif str(quad.operator) == "<>":
+                    f_c.write("if(" + str(quad.operand1) + " != " + str(quad.operand2) + ")" + " goto L_" + str(
+                        quad.operand3) + ";")
                 else:
                     f_c.write("if(" + str(quad.operand1) + " " + str(quad.operator) +
                               " " + str(quad.operand2) + ")" + " goto L_" + str(quad.operand3) + ";")
