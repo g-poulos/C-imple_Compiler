@@ -4,9 +4,9 @@
 import os
 import sys
 
-PRINT_SCOPE_LIST = True
+PRINT_SCOPE_LIST = False
 DEFAULT_VARIABLE_OFFSET = 12
-FILE_NAME = None
+FILE_NAME = ""
 
 group_symbol_list = ["{", "}", "(", ")", "[", "]"]
 delimiter_list = [",", ";", "."]
@@ -33,7 +33,7 @@ sb_file_str = ""
 
 def reset_global_variables():  # Resets global variables for testing
     global program_name, quad_number, temp_var_number, FILE_NAME, sb_file_str
-    FILE_NAME = None
+    FILE_NAME = ""
     program_name = ""
     quad_number = 1
     temp_var_number = 0
@@ -181,7 +181,6 @@ class Lex:
                 # For every line o f the program print scope list
                 if PRINT_SCOPE_LIST:
                     print_scope_list()
-                save_symbol_table()
 
                 character = self.file.read(1)
             else:
@@ -371,6 +370,9 @@ class Parser:
                 add_scope()
                 token = self.__get_token()
                 self.__block(program_name)
+
+                if PRINT_SCOPE_LIST:
+                    print_scope_list()
                 save_symbol_table()
                 delete_scope()
                 if token.recognized_string == ".":
@@ -455,6 +457,7 @@ class Parser:
 
                     current_scope_functions[-1].frame_length = scope_list[-1].variable_offset  # TODO: How to calculate
                     current_scope_functions = current_scope_functions[:-1]
+                    save_symbol_table()
                     delete_scope()
                 else:
                     self.__error("subprogram")
@@ -1189,7 +1192,7 @@ def main():
     parser_obj = Parser(lex_object)
     parser_obj.syntax_analyzer()
 
-    print_quads()
+    # print_quads()
     write_sb_file()
     convert_int()
     convert_c()
