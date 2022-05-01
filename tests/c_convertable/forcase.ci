@@ -1,0 +1,19 @@
+program forcaseTest
+{
+    declare a;
+    input(a);
+
+    forcase
+        case(a>0)
+        {
+            a:=a-1;
+            print(a);
+        }
+        case(a<0)
+        {
+            a:=a+1;
+            print(a);
+        }
+        default
+            print(a);
+}.

@@ -1,0 +1,15 @@
+program primes
+{
+    declare num, fact, index;
+    input(num);
+    fact := 1;
+    index:= 1;
+
+    while (index < (num+1))
+    {
+        fact := fact * index;
+        index:= index + 1;
+    };
+
+    print(fact);
+}.
