@@ -2,8 +2,8 @@
 # Poulos Grigorios, 4480, cse84480
 
 * Usage: $python3 met.py <inputfile>
-* The programs in the 'test' folder where used to test the compiler.Each sub-folder
-  contains:
+* The programs in the 'test' folder where used to test the compiler. The sub-folders
+  contain:
     - 'lex' and 'syntax': small programs that are expected to fail the compilation.
     - 'complete_programs': Complete programs that can be compiled without errors.
     - 'intermediate': Complete and small programs that where used to test the generated
@@ -13,11 +13,13 @@
     - 'c_convertable': Programs that can be compiled and converted to C. The .c file
                        can then be also compiled and run. All programs expect an input
                        from the user.
-* Unit tests where also used to test the 'intermediate' and 'complete_programs' test folders.s
+* The 'complete_programs' and 'intermediate' tests were automatically being run in every
+  code addition to ensure the functionality of the compiler.
 * The implementation of the compiler follows the object-oriented structure which is
   described in the course material.
 
 
+  A simple class diagram is shown below:
 
         ---------------    ---------------      ---------------     ---------------     ---------------
         |     Lex     |----|   Parser    |------|   Token     |     |     Quad    |     |     Scope   |
@@ -27,10 +29,10 @@
                                     -------------
                                     |   Entity  |
                                     -------------
-                                           ^
-                                          / \
-                                           |
-                                           |
+                                          ^
+                                         / \
+                                          |
+                                          |
                ------------------------------------------------------------
                |                  |                   |                   |
                |                  |                   |                   |

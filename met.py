@@ -1200,12 +1200,11 @@ def main():
     if sys.argv[1].split(".")[-1] != "ci":
         sys.exit("ERROR: Compiler accepts only '.ci' files")
 
-    # ------------------------------- Phase 1 main
     lex_object = Lex(1, sys.argv[1], None)
     parser_obj = Parser(lex_object)
     parser_obj.syntax_analyzer()
 
-    print_quads()
+    # print_quads()
     write_sb_file()
     convert_int()
     convert_c()
