@@ -9,7 +9,9 @@
     - 'intermediate': Complete and small programs that where used to test the generated
                       quads after the compilation. This folder also contains a
                       sub-folder with the expected output of each test.
-    - 'symbol_table': Programs from the course material to test the symbol table.
+    - 'symbol_table': Programs from the course material to test the symbol table. Its
+                      functionality was also confirmed with programs from the other test
+                      directories.
     - 'c_convertable': Programs that can be compiled and converted to C. The .c file
                        can then be also compiled and run. All programs expect an input
                        from the user.
@@ -21,13 +23,13 @@
 
   A simple class diagram is shown below:
 
-        ---------------    ---------------      ---------------     ---------------     ---------------
-        |     Lex     |----|   Parser    |------|   Token     |     |     Quad    |     |     Scope   |
-        ---------------    ---------------      ---------------     ---------------     ---------------
-
-
-                                    -------------
-                                    |   Entity  |
+        ---------------    ---------------      ---------------     ---------------
+        |     Lex     |----|   Parser    |      |     Quad    |     |     Scope   |
+        ---------------    ---------------      ---------------     ---------------
+               |
+        ---------------
+        |    Token    |             -------------
+        ---------------             |   Entity  |
                                     -------------
                                           ^
                                          / \
