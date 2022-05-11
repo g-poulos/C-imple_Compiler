@@ -24,11 +24,15 @@ temp_var_number = 0
 quad_list = []
 
 # Symbol Table variables
-scope_list = []
+scope_list = []     # List of scopes as the code is being compiled
+symbol_table = []   # Finished Symbol Table
 global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_functions = []
 sb_file_str = ""
+
+# Final code
+final_code_list = []
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -1145,14 +1149,16 @@ def add_scope():
 def delete_scope():
     global global_nesting_level
     global_nesting_level = global_nesting_level - 1
+    symbol_table.append(scope_list[len(scope_list)-1])
     del scope_list[len(scope_list)-1]
 
 
-def find_in_scope(entity_name):
-    for scope in reversed(scope_list):
+def find_in_symbol_table(entity_name):
+    # Searches for entity after the Symbol Table is complete
+    for scope in reversed(symbol_table):
         for entity in scope.entity_list:
             if entity.name == entity_name:
-                return entity
+                return entity, scope.nesting_level
     print("ERROR: Entity not found!")
     return False
 
@@ -1193,6 +1199,41 @@ def add_entity(entity):
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
+def riskv_write(command):
+    final_code_list.append(command)
+
+
+def gnvlcode(v):
+    global final_code_list
+    entity, entity_nesting_level = find_in_symbol_table(v)
+    levels = symbol_table[-1].nesting_level - entity_nesting_level
+    riskv_write(f"lw t0, -4(sp)")
+    for i in range(levels):
+        riskv_write(f"lw t0, -4(t0)")
+    riskv_write(f"addi t0, t0, -{entity.offset}")
+
+
+def generate_riskv(quad):
+
+    rel_op_to_riskv = [["=", "beq"], ["<", "blt"], [">", "bgt"],
+                       ["<=", "ble"], [">=", "bge"], ["<>", "bne"]]
+
+    if quad.operator == "jump":
+        riskv_write(f"b {quad.quad_label}")
+    elif quad.operator == ":=":
+        gnvlcode(quad.operand3)
+
+
+def write_riskv_file():
+    for quad in quad_list:
+        generate_riskv(quad)
+
+
+def print_riskv_commands():
+    for command in final_code_list:
+        print(command)
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit("ERROR: Usage $python met.py <inputfile>")
@@ -1208,6 +1249,9 @@ def main():
     write_sb_file()
     convert_int()
     convert_c()
+
+    write_riskv_file()
+    print_riskv_commands()
 
 
 if __name__ == "__main__":
