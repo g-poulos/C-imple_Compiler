@@ -24,8 +24,7 @@ temp_var_number = 0
 quad_list = []
 
 # Symbol Table variables
-scope_list = []     # List of scopes as the code is being compiled
-symbol_table = []   # Finished Symbol Table
+scope_list = []
 global_nesting_level = 0
 variable_offset = DEFAULT_VARIABLE_OFFSET
 current_scope_functions = []
@@ -402,6 +401,8 @@ class Parser:
             gen_quad("begin_block", block_name, "_", "_")
             if block_name != program_name:
                 current_scope_functions[-1].start_quad = quad_number
+            block_start_quad = quad_number
+
             self.__blockstatements()
 
             if block_name == program_name:
@@ -413,6 +414,13 @@ class Parser:
                 self.__error("BLOCK_}")
         else:
             self.__error("BLOCK_{")
+        # Generate Risk-V code
+
+        print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
+        for quad in quad_list[block_start_quad-2:]:
+            print(quad)
+            generate_riskv(quad)
+        print_riskv_commands()
 
     def __declarations(self):
         global token
@@ -1149,13 +1157,12 @@ def add_scope():
 def delete_scope():
     global global_nesting_level
     global_nesting_level = global_nesting_level - 1
-    symbol_table.append(scope_list[len(scope_list)-1])
     del scope_list[len(scope_list)-1]
 
 
 def find_in_symbol_table(entity_name):
     # Searches for entity after the Symbol Table is complete
-    for scope in reversed(symbol_table):
+    for scope in reversed(scope_list):
         for entity in scope.entity_list:
             if entity.name == entity_name:
                 return entity, scope.nesting_level
@@ -1206,12 +1213,21 @@ def riskv_write(command):
 def gnvlcode(v):
     global final_code_list
     entity, entity_nesting_level = find_in_symbol_table(v)
-    levels = symbol_table[-1].nesting_level - entity_nesting_level
+    levels = scope_list[-1].nesting_level - entity_nesting_level
     riskv_write(f"lw t0, -4(sp)")
     for i in range(levels):
         riskv_write(f"lw t0, -4(t0)")
     riskv_write(f"addi t0, t0, -{entity.offset}")
 
+
+def loadvr(v, r):
+    entity, entity_level = find_in_symbol_table(v)
+    current_level = scope_list[-1].nesting_level
+
+    if v.isnumeric():                   # Constant
+        riskv_write(f"li tr, {v}")
+    elif entity.type_of_entity == "Variable" and entity_level == 0:
+        riskv_write(f"lw tr, -{entity.offset}(gp)")
 
 def generate_riskv(quad):
 
@@ -1221,12 +1237,12 @@ def generate_riskv(quad):
     if quad.operator == "jump":
         riskv_write(f"b {quad.quad_label}")
     elif quad.operator == ":=":
-        gnvlcode(quad.operand3)
+        pass
 
 
 def write_riskv_file():
-    for quad in quad_list:
-        generate_riskv(quad)
+    #  TODO
+    pass
 
 
 def print_riskv_commands():
