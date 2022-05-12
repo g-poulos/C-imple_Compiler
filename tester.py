@@ -26,10 +26,13 @@ def file_to_list(filename):
 class CompilerTester(unittest.TestCase):
 
     def test_quad_programs(self):
+        met.GENERATE_RISKV_CODE = False
         for pair in program_pairs:
             self.__test_quad_list(pair[0], pair[1])
 
     def __test_quad_list(self, program, expected):
+        met.GENERATE_RISKV_CODE = False
+
         test_name = program.split("/")
         test_name = test_name[len(test_name)-1]
         print(Fore.CYAN + "Processing " + test_name + "...")
@@ -45,6 +48,8 @@ class CompilerTester(unittest.TestCase):
 
     @staticmethod
     def test_complete_programs():
+        met.GENERATE_RISKV_CODE = False
+
         directory = "tests/complete_programs"
         program_list = os.listdir(directory)
         program_count = 1
@@ -60,8 +65,8 @@ class CompilerTester(unittest.TestCase):
 
     def test_loadvr_boolean_functions(self):
         variable = Variable("Var", "Variable", 0)
-        cv_par = Parameter("cv_par", "CV", 0)
-        ref_par = Parameter("ref_par", "REF", 0)
+        cv_par = Parameter("cv_par", "cv", 0)
+        ref_par = Parameter("ref_par", "ref", 0)
         temp_var = TempVariable("temp_var", 0)
 
         self.assertTrue(local_var_cv_par(variable))
