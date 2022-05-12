@@ -78,3 +78,8 @@ class CompilerTester(unittest.TestCase):
         self.assertFalse(ref_param(variable))
         self.assertFalse(ref_param(cv_par))
         self.assertFalse(ref_param(temp_var))
+
+        self.assertTrue(cv_param(cv_par))
+        self.assertFalse(cv_param(variable))
+        self.assertFalse(cv_param(ref_par))
+        self.assertFalse(cv_param(temp_var))

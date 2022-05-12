@@ -1225,28 +1225,31 @@ def loadvr(v, r):
     current_level = scope_list[-1].nesting_level
 
     if v.isnumeric():                   # Constant
-        riskv_write(f"li tr, {v}")
+        riskv_write(f"li t{r}, {v}")
     elif entity.type_of_entity == "Variable" and entity_level == 0:
-        riskv_write(f"lw tr, -{entity.offset}(gp)")
+        riskv_write(f"lw t{r}, -{entity.offset}(gp)")
     elif entity_level == current_level and local_var_cv_par_temp_var(entity):
-        riskv_write(f"lw tr, -{entity.offset}(sp)")
+        riskv_write(f"lw t{r}, -{entity.offset}(sp)")
     elif entity_level == current_level and ref_param(entity):
         riskv_write(f"lw t0, -{entity.offset}(sp)")
-        riskv_write(f"lw tr, (t0)")
+        riskv_write(f"lw t{r}, (t0)")
     elif entity_level > current_level and local_var_cv_par(entity):
         gnvlcode(v)
-        riskv_write(f"lw tr, (t0)")
+        riskv_write(f"lw t{r}, (t0)")
     elif entity_level > current_level and ref_param(entity):
         gnvlcode(v)
         riskv_write(f"lw t0, (t0)")
-        riskv_write(f"tr, (t0)")
+        riskv_write(f"t{r}, (t0)")
     elif entity_level > current_level and local_var_cv_par(entity):
         gnvlcode(v)
-        riskv_write(f"lw tr, (t0)")
+        riskv_write(f"lw t{r}, (t0)")
     elif entity_level > current_level and ref_param(entity):
         gnvlcode(v)
         riskv_write(f"lw t0, (t0)")
-        riskv_write(f"lw tr, (t0)")
+        riskv_write(f"lw t{r}, (t0)")
+    else:
+        print("ERROR : loadvr")
+        sys.exit(-1)
 
 
 def local_var_cv_par(entity):
@@ -1266,6 +1269,36 @@ def ref_param(entity):
     if entity.type_of_entity == "Parameter" and entity.par_mode == "REF":
         return True
     return False
+
+
+def cv_param(entity):
+    if entity.type_of_entity == "Parameter" and entity.par_mode == "CV":
+        return True
+    return False
+
+
+def storerv(r, v):
+    entity, entity_level = find_in_symbol_table(v)
+    current_level = scope_list[-1].nesting_level
+
+    if entity.type_of_entity == "Variable" and entity_level == 0:
+        riskv_write(f"sw t{r}, -{entity.offset}(gp)")
+    elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level == current_level) or \
+            entity.type_of_entity == "TempVariable":
+        riskv_write(f"sw t{r}, -{entity.offset}(sp)")
+    elif ref_param(entity) and entity_level == current_level:
+        riskv_write(f"lw t0, -{entity.offset}(sp)")
+        riskv_write(f"sw t{r}, (t0)")
+    elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level < current_level):
+        gnvlcode(v)
+        riskv_write(f"sw t{r}, (t0)")
+    elif ref_param(entity) and entity_level < current_level:
+        gnvlcode(v)
+        riskv_write(f"lw t0, (t0)")
+        riskv_write(f"sw t{r}, (t0)")
+    else:
+        print("ERROR : storerv")
+        sys.exit(-1)
 
 
 def generate_riskv(quad):
