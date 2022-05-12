@@ -43,7 +43,8 @@ class CompilerTester(unittest.TestCase):
         reset_global_variables()
         print(Fore.GREEN + "DONE\n")
 
-    def test_complete_programs(self):
+    @staticmethod
+    def test_complete_programs():
         directory = "tests/complete_programs"
         program_list = os.listdir(directory)
         program_count = 1
@@ -57,8 +58,23 @@ class CompilerTester(unittest.TestCase):
             print(Fore.GREEN + f"DONE\n [{program_count}/{len(program_list)}]")
             program_count = program_count + 1
 
+    def test_loadvr_boolean_functions(self):
+        variable = Variable("Var", "Variable", 0)
+        cv_par = Parameter("cv_par", "CV", 0)
+        ref_par = Parameter("ref_par", "REF", 0)
+        temp_var = TempVariable("temp_var", 0)
 
+        self.assertTrue(local_var_cv_par(variable))
+        self.assertTrue(local_var_cv_par(cv_par))
+        self.assertFalse(local_var_cv_par(ref_par))
+        self.assertFalse(local_var_cv_par(temp_var))
 
+        self.assertTrue(local_var_cv_par_temp_var(variable))
+        self.assertTrue(local_var_cv_par_temp_var(cv_par))
+        self.assertTrue(local_var_cv_par_temp_var(temp_var))
+        self.assertFalse(local_var_cv_par_temp_var(ref_par))
 
-
-
+        self.assertTrue(ref_param(ref_par))
+        self.assertFalse(ref_param(variable))
+        self.assertFalse(ref_param(cv_par))
+        self.assertFalse(ref_param(temp_var))

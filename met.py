@@ -1228,6 +1228,45 @@ def loadvr(v, r):
         riskv_write(f"li tr, {v}")
     elif entity.type_of_entity == "Variable" and entity_level == 0:
         riskv_write(f"lw tr, -{entity.offset}(gp)")
+    elif entity_level == current_level and local_var_cv_par_temp_var(entity):
+        riskv_write(f"lw tr, -{entity.offset}(sp)")
+    elif entity_level == current_level and ref_param(entity):
+        riskv_write(f"lw t0, -{entity.offset}(sp)")
+        riskv_write(f"lw tr, (t0)")
+    elif entity_level > current_level and local_var_cv_par(entity):
+        gnvlcode(v)
+        riskv_write(f"lw tr, (t0)")
+    elif entity_level > current_level and ref_param(entity):
+        gnvlcode(v)
+        riskv_write(f"lw t0, (t0)")
+        riskv_write(f"tr, (t0)")
+    elif entity_level > current_level and local_var_cv_par(entity):
+        gnvlcode(v)
+        riskv_write(f"lw tr, (t0)")
+    elif entity_level > current_level and ref_param(entity):
+        gnvlcode(v)
+        riskv_write(f"lw t0, (t0)")
+        riskv_write(f"lw tr, (t0)")
+
+
+def local_var_cv_par(entity):
+    if entity.type_of_entity == "Variable" or \
+            (entity.type_of_entity == "Parameter" and entity.par_mode == "CV"):
+        return True
+    return False
+
+
+def local_var_cv_par_temp_var(entity):
+    if local_var_cv_par(entity) or entity.type_of_entity == "TempVariable":
+        return True
+    return False
+
+
+def ref_param(entity):
+    if entity.type_of_entity == "Parameter" and entity.par_mode == "REF":
+        return True
+    return False
+
 
 def generate_riskv(quad):
 
