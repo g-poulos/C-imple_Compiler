@@ -33,6 +33,7 @@ sb_file_str = ""
 
 # Final code
 final_code_list = []
+number_of_params = 1
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -421,7 +422,7 @@ class Parser:
             print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
             for quad in quad_list[block_start_quad-2:]:
                 print(quad)
-                generate_riskv(quad)
+                generate_riskv(quad, block_name)
             print("\n---------RISKV---------")
             print_riskv_commands()
 
@@ -1310,24 +1311,80 @@ def storerv(r, v):
         sys.exit(-1)
 
 
-def generate_riskv(quad):
+def generate_riskv(quad, block_name):
 
     if quad.operator == "jump":
         riskv_write(f"b {quad.quad_label}")
     elif quad.operator in rel_op_list:
-        riskv_operator = convert_to_riskv_operator(quad.operator)
+        riskv_operator = convert_to_riskv_branch(quad.operator)
         loadvr(quad.operand1, "1")
         loadvr(quad.operand2, "2")
         riskv_write(f"{riskv_operator}, t1, t2, {quad.operand3}")
+
     elif quad.operator == ":=":
         loadvr(quad.operand1, "1")
-        storerv("t1", quad.operand3)
+        storerv("1", quad.operand3)
 
+    elif quad.operator in operator_list:
+        riskv_operator = convert_to_riskv_operator(quad.operator)
+        loadvr(quad.operand1, "1")
+        loadvr(quad.operand2, "2")
+        riskv_write(f"{riskv_operator} t1, t1, t2")
+        storerv("1", quad.operand3)
 
-def convert_to_riskv_operator(operator):
+    elif quad.operator == "RET":
+        loadvr(quad.operand1, "1")
+        riskv_write(f"lw t0, -8(sp)")
+        riskv_write(f"sw t1, (t0)")
+
+    elif quad.operator == "par":
+        entity, entity_level = find_in_symbol_table(quad.operand1)
+        block_function = find_in_symbol_table(block_name)
+
+        riskv_write(f"addi fp, sp, ")
+        if quad.operand2 == "CV":
+            loadvr(quad.operand1, "0")
+            riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+        elif quad.operand2 == "REF":
+            if block_function.nesting_level == entity_level:
+
+                if entity.type_of_entity == "Variable" or cv_param(entity):
+                    riskv_write(f"addi t0, sp, -{entity.offset}")
+                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+
+                elif ref_param(entity):
+                    riskv_write(f"lw t0, -{entity.offset}(sp)")
+                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+            else:
+                if entity.type_of_entity == "Variable" or cv_param(entity):
+                    gnvlcode(quad.operand1)
+                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+
+                elif ref_param(entity):
+                    gnvlcode(quad.operand1)
+                    riskv_write(f"lw t0, (t0)")
+                    riskv_write(f"sw t0, -({entity.offset})(fp)")
+
+        elif quad.operand2 == "RET":
+            riskv_write(f"addi t0, sp, -{entity.offset}")
+            riskv_write(f"sw t0, -8(fp)")
+
+    elif quad.operator == "call":
+        pass
+
+def convert_to_riskv_branch(operator):
     rel_op_to_riskv = [["=", "beq"], ["<", "blt"], [">", "bgt"],
                        ["<=", "ble"], [">=", "bge"], ["<>", "bne"]]
     for riskv_op in rel_op_to_riskv:
+        if operator == riskv_op[0]:
+            return riskv_op[1]
+    return "OP_MATCH_FAILED"
+
+
+def convert_to_riskv_operator(operator):
+    op_to_riskv = [["+", "add"], ["-", "sub"], ["*", "mul"], ["/", "div"]]
+
+    for riskv_op in op_to_riskv:
         if operator == riskv_op[0]:
             return riskv_op[1]
     return "OP_MATCH_FAILED"
