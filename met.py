@@ -23,6 +23,7 @@ program_name = ""
 quad_number = 1
 temp_var_number = 0
 quad_list = []
+num_flag = 1
 
 # Symbol Table variables
 scope_list = []
@@ -32,7 +33,7 @@ current_scope_functions = []
 sb_file_str = ""
 
 # Final code
-final_code_list = []
+final_code_list = ["L0:", "b Lmain"]
 number_of_params = 1
 
 
@@ -420,9 +421,14 @@ class Parser:
 
         if GENERATE_RISKV_CODE:
             # print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
+            if block_name == program_name:
+                riskv_write(f"Lmain:")
+
+
             for quad in quad_list[block_start_quad-2:]:
                 # print(quad)
                 generate_riskv(quad, block_name)
+
             # print("\n---------RISKV---------")
             # print_riskv_commands()
 
@@ -1313,11 +1319,23 @@ def storerv(r, v):
 def generate_riskv(quad, block_name):
     global number_of_params
 
+    global num_flag
+
+    riskv_write(f"L{num_flag}:")
+    num_flag += 1
+
+
     if quad.operator == "jump":
         riskv_write(f"b {quad.quad_label}")
 
     elif quad.operator == "begin_block":
-        riskv_write(f"sw ra, -0(sp)")
+        if block_name == program_name:
+            riskv_write(f"addi sp,sp, ")
+            riskv_write(f"move gp,sp")
+        else:
+            riskv_write(f"sw ra, -0(sp)")
+
+
 
     elif quad.operator == "end_block":
         riskv_write(f"lw ra, -0(sp)")
@@ -1395,10 +1413,10 @@ def generate_riskv(quad, block_name):
         else:
             riskv_write(f"sw sp, -4(fp)")
 
-        riskv_write(f"addi sp, sp, ") ###################################   framelength where?
+        riskv_write(f"addi sp, sp, ") #   framelength where?
         riskv_write(f"jal {quad.operand3}")
         # riskv_write(f"sw ra, sp")
-        riskv_write(f"addi sp, sp, ")  ################################### -framelength where?
+        riskv_write(f"addi sp, sp, ")  # -framelength where?
 
 
 def convert_to_riskv_branch(operator):
