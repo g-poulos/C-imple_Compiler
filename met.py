@@ -24,6 +24,7 @@ quad_number = 1
 temp_var_number = 0
 quad_list = []
 num_flag = 1
+jump_label_num = 0
 
 # Symbol Table variables
 scope_list = []
@@ -34,7 +35,7 @@ sb_file_str = ""
 
 # Final code
 final_code_list = ["L0:", "b Lmain"]
-number_of_params = 1
+number_of_params = 0
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -1239,7 +1240,7 @@ def loadvr(v, r):
         current_level = scope_list[-1].nesting_level
         
         if entity.type_of_entity == "Variable" and entity_level == 0:
-            riskv_write(f"lw t{r}, -{entity.offset}(gp)")
+            riskv_write(f"lw t{r}, -{entity.offset}(sp)")
         elif entity_level == current_level and local_var_cv_par_temp_var(entity):
             riskv_write(f"lw t{r}, -{entity.offset}(sp)")
         elif entity_level == current_level and ref_param(entity):
@@ -1294,7 +1295,7 @@ def storerv(r, v):
         current_level = scope_list[-1].nesting_level
 
         if entity.type_of_entity == "Variable" and entity_level == 0:
-            riskv_write(f"sw t{r}, -{entity.offset}(gp)")
+            riskv_write(f"sw t{r}, -{entity.offset}(sp)")
         elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level == current_level) or \
                 entity.type_of_entity == "TempVariable":
             riskv_write(f"sw t{r}, -{entity.offset}(sp)")
@@ -1318,8 +1319,8 @@ def storerv(r, v):
 
 def generate_riskv(quad, block_name):
     global number_of_params
-
     global num_flag
+    global jump_label_num
 
     riskv_write(f"L{num_flag}:")
     num_flag += 1
@@ -1330,11 +1331,11 @@ def generate_riskv(quad, block_name):
 
     elif quad.operator == "begin_block":
         if block_name == program_name:
-            riskv_write(f"addi sp,sp, ")
+            riskv_write(f"addi sp,sp,{scope_list[0].variable_offset} ")
             riskv_write(f"move gp,sp")
         else:
             riskv_write(f"sw ra, -0(sp)")
-
+            jump_label_num = num_flag - 1
 
 
     elif quad.operator == "end_block":
@@ -1374,8 +1375,9 @@ def generate_riskv(quad, block_name):
             block_nesting_level = block_function.nesting_level
             frame_length = block_function.frame_length
 
-        riskv_write(f"addi fp, sp, {frame_length}") # TODO: calculate frame length
+
         if quad.operand2 == "CV":
+            riskv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
             loadvr(quad.operand1, "0")
             riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
         elif quad.operand2 == "REF":
@@ -1406,17 +1408,25 @@ def generate_riskv(quad, block_name):
     elif quad.operator == "call":
         current_level = scope_list[-1].nesting_level
         entity, entity_level = find_in_symbol_table(quad.operand1)
+        block_function = find_in_symbol_table(block_name)
+
+        if block_name == program_name:
+            block_nesting_level = 0
+            frame_length = scope_list[0].variable_offset
+        else:
+            block_nesting_level = block_function.nesting_level
+            frame_length = block_function.frame_length
 
         if entity_level == current_level:
-            riskv_write(f"lw t0, -4(sp)")
             riskv_write(f"sw t0, -4(fp)")
         else:
+            riskv_write(f"lw t0, -4(sp)")
             riskv_write(f"sw sp, -4(fp)")
 
-        riskv_write(f"addi sp, sp, ") #   framelength where?
-        riskv_write(f"jal {quad.operand3}")
+        riskv_write(f"addi sp, sp, {frame_length}")
+        riskv_write(f"jal L{jump_label_num}")
         # riskv_write(f"sw ra, sp")
-        riskv_write(f"addi sp, sp, ")  # -framelength where?
+        riskv_write(f"addi sp, sp, -{frame_length}")
 
 
 def convert_to_riskv_branch(operator):
