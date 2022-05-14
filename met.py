@@ -1348,6 +1348,14 @@ def generate_riskv(quad, block_name):
         loadvr(quad.operand2, "2")
         riskv_write(f"{riskv_operator}, t1, t2, {quad.operand3}")
 
+    elif quad.operator == "out":
+        riskv_write(f"lw, t1, -{scope_list[0].variable_offset}(sp)") #WRONG OFFSET
+
+    elif quad.operator == "halt":
+        riskv_write(f"li a0, 0")
+        riskv_write(f"li a7,93")
+        riskv_write(f"ecall")
+
     elif quad.operator == ":=":
         loadvr(quad.operand1, "1")
         storerv("1", quad.operand3)
