@@ -1349,12 +1349,14 @@ def generate_riskv(quad, block_name):
         entity, entity_level = find_in_symbol_table(quad.operand1)
         block_function = find_in_symbol_table(block_name)
 
-        if block_function:
-            block_nesting_level = block_function.nesting_level
-        else:
+        if block_name == program_name:
             block_nesting_level = 0
+            frame_length = scope_list[0].variable_offset
+        else:
+            block_nesting_level = block_function.nesting_level
+            frame_length = block_function.frame_length
 
-        # riskv_write(f"addi fp, sp, {block_function.frame_length}") # TODO: calculate frame length
+        riskv_write(f"addi fp, sp, {frame_length}") # TODO: calculate frame length
         if quad.operand2 == "CV":
             loadvr(quad.operand1, "0")
             riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
@@ -1418,8 +1420,13 @@ def convert_to_riskv_operator(operator):
 
 
 def write_riskv_file():
-    #  TODO
-    pass
+    riskv_file_name = FILE_NAME + ".asm"
+    if os.path.exists(riskv_file_name):
+        os.remove(riskv_file_name)
+    riskv_file = open(riskv_file_name, "a")
+    for command in final_code_list:
+        riskv_file.write(command + "\n")
+    riskv_file.close()
 
 
 def print_riskv_commands():
