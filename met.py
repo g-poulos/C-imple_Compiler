@@ -1246,13 +1246,6 @@ def loadvr(v, r):
             gnvlcode(v)
             riskv_write(f"lw t0, (t0)")
             riskv_write(f"t{r}, (t0)")
-        elif entity_level > current_level and local_var_cv_par(entity):
-            gnvlcode(v)
-            riskv_write(f"lw t{r}, (t0)")
-        elif entity_level > current_level and ref_param(entity):
-            gnvlcode(v)
-            riskv_write(f"lw t0, (t0)")
-            riskv_write(f"lw t{r}, (t0)")
         else:
             print("ERROR : loadvr")
             sys.exit(-1)
@@ -1285,36 +1278,51 @@ def cv_param(entity):
 
 def storerv(r, v):
     # print("STOREVR")
-    entity, entity_level = find_in_symbol_table(v)
-    current_level = scope_list[-1].nesting_level
 
-    if entity.type_of_entity == "Variable" and entity_level == 0:
-        riskv_write(f"sw t{r}, -{entity.offset}(gp)")
-    elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level == current_level) or \
-            entity.type_of_entity == "TempVariable":
-        riskv_write(f"sw t{r}, -{entity.offset}(sp)")
-    elif ref_param(entity) and entity_level == current_level:
-        riskv_write(f"lw t0, -{entity.offset}(sp)")
-        riskv_write(f"sw t{r}, (t0)")
-    elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level < current_level):
-        gnvlcode(v)
-        riskv_write(f"sw t{r}, (t0)")
-    elif ref_param(entity) and entity_level < current_level:
-        gnvlcode(v)
-        riskv_write(f"lw t0, (t0)")
-        riskv_write(f"sw t{r}, (t0)")
+    if v.isnumeric():
+        loadvr(r, "0")
+        storerv("0", v)
+
     else:
-        print(f"ERROR : storerv {r} {v}")   # TODO: cleanup
-        print(entity, end=" ")
-        print(entity_level)
-        print(current_level)
-        sys.exit(-1)
+
+        entity, entity_level = find_in_symbol_table(v)
+        current_level = scope_list[-1].nesting_level
+
+        if entity.type_of_entity == "Variable" and entity_level == 0:
+            riskv_write(f"sw t{r}, -{entity.offset}(gp)")
+        elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level == current_level) or \
+                entity.type_of_entity == "TempVariable":
+            riskv_write(f"sw t{r}, -{entity.offset}(sp)")
+        elif ref_param(entity) and entity_level == current_level:
+            riskv_write(f"lw t0, -{entity.offset}(sp)")
+            riskv_write(f"sw t{r}, (t0)")
+        elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level < current_level):
+            gnvlcode(v)
+            riskv_write(f"sw t{r}, (t0)")
+        elif ref_param(entity) and entity_level < current_level:
+            gnvlcode(v)
+            riskv_write(f"lw t0, (t0)")
+            riskv_write(f"sw t{r}, (t0)")
+        else:
+            print(f"ERROR : storerv {r} {v}")   # TODO: cleanup
+            print(entity, end=" ")
+            print(entity_level)
+            print(current_level)
+            sys.exit(-1)
 
 
 def generate_riskv(quad, block_name):
 
     if quad.operator == "jump":
         riskv_write(f"b {quad.quad_label}")
+
+    elif quad.operator == "begin_block":
+        riskv_write(f"sw ra, -0(sp)")
+
+    elif quad.operator == "end_block":
+        riskv_write(f"lw ra, -0(sp)")
+        riskv_write(f"jr ra")
+
     elif quad.operator in rel_op_list:
         riskv_operator = convert_to_riskv_branch(quad.operator)
         loadvr(quad.operand1, "1")
@@ -1363,13 +1371,26 @@ def generate_riskv(quad, block_name):
                 elif ref_param(entity):
                     gnvlcode(quad.operand1)
                     riskv_write(f"lw t0, (t0)")
-                    riskv_write(f"sw t0, -({entity.offset})(fp)")
+                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
 
         elif quad.operand2 == "RET":
             riskv_write(f"addi t0, sp, -{entity.offset}")
             riskv_write(f"sw t0, -8(fp)")
 
     elif quad.operator == "call":
+        # current_level = scope_list[-1].nesting_level
+        # entity, entity_level = find_in_symbol_table(quad.operand1)
+        #
+        # if entity_level == current_level:
+        #     riskv_write(f"lw t0, -4(sp)")
+        #     riskv_write(f"sw t0, -4(fp)")
+        # else:
+        #     riskv_write(f"sw sp, -4(fp)")
+        #
+        # riskv_write(f"addi sp, sp, ") ###################################   framelength where?
+        # riskv_write(f"jal {quad.operand3}")
+        # # riskv_write(f"sw ra, sp")
+        # riskv_write(f"addi sp, sp, ")  ################################### -framelength where?
         pass
 
 def convert_to_riskv_branch(operator):
