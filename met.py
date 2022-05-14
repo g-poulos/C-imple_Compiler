@@ -419,12 +419,12 @@ class Parser:
         # Generate Risk-V code
 
         if GENERATE_RISKV_CODE:
-            print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
+            # print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
             for quad in quad_list[block_start_quad-2:]:
-                print(quad)
+                # print(quad)
                 generate_riskv(quad, block_name)
-            print("\n---------RISKV---------")
-            print_riskv_commands()
+            # print("\n---------RISKV---------")
+            # print_riskv_commands()
 
     def __declarations(self):
         global token
@@ -1170,7 +1170,7 @@ def find_in_symbol_table(entity_name):
         for entity in scope.entity_list:
             if entity.name == entity_name:
                 return entity, scope.nesting_level
-    print(f"ERROR: Entity '{entity_name}' not found!")
+    # print(f"ERROR: Entity '{entity_name}' not found!")
     return False
 
 
@@ -1284,7 +1284,6 @@ def storerv(r, v):
         storerv("0", v)
 
     else:
-
         entity, entity_level = find_in_symbol_table(v)
         current_level = scope_list[-1].nesting_level
 
@@ -1312,6 +1311,7 @@ def storerv(r, v):
 
 
 def generate_riskv(quad, block_name):
+    global number_of_params
 
     if quad.operator == "jump":
         riskv_write(f"b {quad.quad_label}")
@@ -1349,12 +1349,17 @@ def generate_riskv(quad, block_name):
         entity, entity_level = find_in_symbol_table(quad.operand1)
         block_function = find_in_symbol_table(block_name)
 
-        riskv_write(f"addi fp, sp, ")
+        if block_function:
+            block_nesting_level = block_function.nesting_level
+        else:
+            block_nesting_level = 0
+
+        # riskv_write(f"addi fp, sp, {block_function.frame_length}") # TODO: calculate frame length
         if quad.operand2 == "CV":
             loadvr(quad.operand1, "0")
             riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
         elif quad.operand2 == "REF":
-            if block_function.nesting_level == entity_level:
+            if block_nesting_level == entity_level:
 
                 if entity.type_of_entity == "Variable" or cv_param(entity):
                     riskv_write(f"addi t0, sp, -{entity.offset}")
@@ -1377,21 +1382,22 @@ def generate_riskv(quad, block_name):
             riskv_write(f"addi t0, sp, -{entity.offset}")
             riskv_write(f"sw t0, -8(fp)")
 
+        number_of_params += 1
     elif quad.operator == "call":
-        # current_level = scope_list[-1].nesting_level
-        # entity, entity_level = find_in_symbol_table(quad.operand1)
-        #
-        # if entity_level == current_level:
-        #     riskv_write(f"lw t0, -4(sp)")
-        #     riskv_write(f"sw t0, -4(fp)")
-        # else:
-        #     riskv_write(f"sw sp, -4(fp)")
-        #
-        # riskv_write(f"addi sp, sp, ") ###################################   framelength where?
-        # riskv_write(f"jal {quad.operand3}")
-        # # riskv_write(f"sw ra, sp")
-        # riskv_write(f"addi sp, sp, ")  ################################### -framelength where?
-        pass
+        current_level = scope_list[-1].nesting_level
+        entity, entity_level = find_in_symbol_table(quad.operand1)
+
+        if entity_level == current_level:
+            riskv_write(f"lw t0, -4(sp)")
+            riskv_write(f"sw t0, -4(fp)")
+        else:
+            riskv_write(f"sw sp, -4(fp)")
+
+        riskv_write(f"addi sp, sp, ") ###################################   framelength where?
+        riskv_write(f"jal {quad.operand3}")
+        # riskv_write(f"sw ra, sp")
+        riskv_write(f"addi sp, sp, ")  ################################### -framelength where?
+
 
 def convert_to_riskv_branch(operator):
     rel_op_to_riskv = [["=", "beq"], ["<", "blt"], [">", "bgt"],
