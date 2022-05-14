@@ -28,21 +28,21 @@ class CompilerTester(unittest.TestCase):
     def test_quad_programs(self):
         met.GENERATE_RISKV_CODE = False
         for pair in program_pairs:
-            self.__test_quad_list(pair[0], pair[1])
+            self.__test_quad_list(pair[0], pair[1], met.quad_list)
 
-    def __test_quad_list(self, program, expected):
-        met.GENERATE_RISKV_CODE = False
+    def __test_quad_list(self, program, expected, test_list):
 
         test_name = program.split("/")
         test_name = test_name[len(test_name)-1]
         print(Fore.CYAN + "Processing " + test_name + "...")
-        expected_quads = file_to_list(expected)
+        expected_items = file_to_list(expected)
         lex_object = Lex(1, program, None)
         parser_obj = Parser(lex_object)
         parser_obj.syntax_analyzer()
 
-        for quad, expected_quad in zip(quad_list, expected_quads):
-            self.assertEqual(str(expected_quad), str(quad))
+        # self.assertEqual(len(test_list), len(expected_items))
+        for item, expected_item in zip(test_list, expected_items):
+            self.assertEqual(str(expected_item), str(item))
         reset_global_variables()
         print(Fore.GREEN + "DONE\n")
 
@@ -88,3 +88,11 @@ class CompilerTester(unittest.TestCase):
         self.assertFalse(cv_param(variable))
         self.assertFalse(cv_param(ref_par))
         self.assertFalse(cv_param(temp_var))
+
+    def test_riskv_code(self):
+        met.GENERATE_RISKV_CODE = True
+        program = "tests/final_code/ex1.ci"
+        expected = "tests/final_code/expected/ex1_expected.txt"
+
+        self.__test_quad_list(program, expected, met.final_code_list)
+
