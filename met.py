@@ -730,7 +730,6 @@ class Parser:
                 for par in par_list:
                     gen_quad("par", par[0], par[1], "_")
                 temp_var = new_temp()
-                gen_quad("par", temp_var, "RET", "_")
             gen_quad("call", function_id, "_", "_")
 
             if not token.recognized_string == ")":
