@@ -36,13 +36,13 @@ addi sp, sp, 24
 move gp, sp
 L10:
 li t1, 3
-sw t1, -12(sp)
+sw t1, -12(gp)
 L11:
 li t1, 4
-sw t1, -16(sp)
+sw t1, -16(gp)
 L12:
 addi fp, sp, 20
-lw t1, -12(sp)
+lw t1, -12(gp)
 sw t1, -12(fp)
 L13:
 addi t0, sp, -16
