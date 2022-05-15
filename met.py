@@ -493,7 +493,8 @@ class Parser:
         global token, current_scope_functions
         argument_list = []
         argument = self.__formalparitem()
-        argument_list.append(argument)
+        if argument is not None:
+            argument_list.append(argument)
         while token.recognized_string == ",":
             token = self.__get_token()
             argument = self.__formalparitem()
@@ -504,6 +505,7 @@ class Parser:
         global token
         par_mode = -1
         par_name = -1
+        argument = None
         arg_mode = token.recognized_string
         if token.recognized_string == "in":
             token = self.__get_token()
@@ -513,9 +515,11 @@ class Parser:
             token = self.__get_token()
             par_name = self.__idvalue()
             par_mode = "ref"
-        parameter = Parameter(par_name, par_mode, scope_list[-1].variable_offset)
-        argument = Argument(arg_mode, "int")  # TODO: Type of argument?
-        add_entity(parameter)
+
+        if arg_mode != ")":
+            parameter = Parameter(par_name, par_mode, scope_list[-1].variable_offset)
+            argument = Argument(arg_mode, "int")
+            add_entity(parameter)
         return argument
 
     def __statements(self):
@@ -1224,11 +1228,12 @@ def add_entity(entity):
             entity.type_of_entity == "Variable" or \
             entity.type_of_entity == "TempVariable":
         scope_list[-1].variable_offset = scope_list[-1].variable_offset + 4
-        print(f"ADDED TO SCOPE {len(scope_list)-1} {scope_list[-1].variable_offset} {entity}")
+        print(f"ADDED TO SCOPE {len(scope_list)-1} {scope_list[-1].variable_offset} {entity} {entity.type_of_entity}")
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
 def riskv_write(command):
+    print(command)
     final_code_list.append(command)
 
 
@@ -1257,10 +1262,10 @@ def loadvr(v, r):
         elif entity_level == current_level and ref_param(entity):
             riskv_write(f"lw t0, -{entity.offset}(sp)")
             riskv_write(f"lw t{r}, (t0)")
-        elif entity_level > current_level and local_var_cv_par(entity):
+        elif entity_level < current_level and local_var_cv_par(entity):
             gnvlcode(v)
             riskv_write(f"lw t{r}, (t0)")
-        elif entity_level > current_level and ref_param(entity):
+        elif entity_level < current_level and ref_param(entity):
             gnvlcode(v)
             riskv_write(f"lw t0, (t0)")
             riskv_write(f"t{r}, (t0)")
