@@ -722,6 +722,7 @@ class Parser:
         global token
         token = self.__get_token()
         function_id = self.__idvalue()
+        print("AAAAAAAAAAAAAAAAAAAAAA" + function_id)
         if token.recognized_string == "(":
             token = self.__get_token()
             par_list = self.__actualparlist()
@@ -730,7 +731,7 @@ class Parser:
                     gen_quad("par", par[0], par[1], "_")
                 temp_var = new_temp()
                 gen_quad("par", temp_var, "RET", "_")
-                gen_quad("call", function_id, "_", "_")
+            gen_quad("call", function_id, "_", "_")
 
             if not token.recognized_string == ")":
                 self.__error("callStat")
