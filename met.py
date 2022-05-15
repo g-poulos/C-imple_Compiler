@@ -5,7 +5,7 @@ import os
 import sys
 
 PRINT_SCOPE_LIST = False
-GENERATE_RISKV_CODE = False
+GENERATE_RISKV_CODE = True
 DEFAULT_VARIABLE_OFFSET = 12
 FILE_NAME = ""
 
@@ -381,7 +381,7 @@ class Parser:
 
                 if PRINT_SCOPE_LIST:
                     print_scope_list()
-                print(scope_list[0].variable_offset)
+                print("Main offset " + str(scope_list[0].variable_offset))
                 save_symbol_table()
                 delete_scope()
                 if token.recognized_string == ".":
@@ -1218,6 +1218,7 @@ def add_entity(entity):
             entity.type_of_entity == "Variable" or \
             entity.type_of_entity == "TempVariable":
         scope_list[-1].variable_offset = scope_list[-1].variable_offset + 4
+        print(f"ADDED TO SCOPE {len(scope_list)-1} {scope_list[-1].variable_offset} {entity}")
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
@@ -1353,7 +1354,8 @@ def generate_riskv(quad, block_name):
         riskv_write(f"{riskv_operator}, t1, t2, {quad.operand3}")
 
     elif quad.operator == "out":
-        riskv_write(f"lw, t1, -{scope_list[0].variable_offset}(sp)") #WRONG OFFSET
+        entity, level = find_in_symbol_table(quad.operand1)
+        riskv_write(f"lw, t1, -{entity.offset}(sp)")
 
     elif quad.operator == "halt":
         riskv_write(f"li a0, 0")
@@ -1378,14 +1380,14 @@ def generate_riskv(quad, block_name):
 
     elif quad.operator == "par":
         entity, entity_level = find_in_symbol_table(quad.operand1)
-        block_function = find_in_symbol_table(block_name)
 
         if block_name == program_name:
-            block_nesting_level = 0
+            caller_level = 0
             frame_length = scope_list[0].variable_offset
+
         else:
-            block_nesting_level = block_function.nesting_level
-            frame_length = block_function.frame_length
+            caller, caller_level = find_in_symbol_table(block_name)
+            frame_length = caller.frame_length
 
         if first_parameter:
             riskv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
@@ -1393,26 +1395,26 @@ def generate_riskv(quad, block_name):
 
         if quad.operand2 == "CV":
             loadvr(quad.operand1, "0")
-            riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+            riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
         elif quad.operand2 == "REF":
-            if block_nesting_level == entity_level:
+            if caller_level == entity_level:
 
                 if entity.type_of_entity == "Variable" or cv_param(entity):
                     riskv_write(f"addi t0, sp, -{entity.offset}")
-                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
 
                 elif ref_param(entity):
                     riskv_write(f"lw t0, -{entity.offset}(sp)")
-                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
             else:
                 if entity.type_of_entity == "Variable" or cv_param(entity):
                     gnvlcode(quad.operand1)
-                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
 
                 elif ref_param(entity):
                     gnvlcode(quad.operand1)
                     riskv_write(f"lw t0, (t0)")
-                    riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
+                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
 
         elif quad.operand2 == "RET":
             riskv_write(f"addi t0, sp, -{entity.offset}")
@@ -1439,9 +1441,9 @@ def generate_riskv(quad, block_name):
             riskv_write(f"sw sp, -4(fp)")
 
         riskv_write(f"addi sp, sp, {frame_length}")
-        riskv_write(f"jal L{jump_label_num}")
+        riskv_write(f"jal L{callee.start_quad-1}")
         # riskv_write(f"sw ra, sp")
-        riskv_write(f"addi sp, sp, -{frame_length}")  # -framelength where?
+        riskv_write(f"addi sp, sp, -{frame_length}")
 
 
 def convert_to_riskv_branch(operator):
