@@ -5,7 +5,7 @@ import os
 import sys
 
 PRINT_SCOPE_LIST = False
-GENERATE_RISKV_CODE = True
+GENERATE_RISKV_CODE = False
 DEFAULT_VARIABLE_OFFSET = 12
 FILE_NAME = ""
 
@@ -23,8 +23,6 @@ program_name = ""
 quad_number = 1
 temp_var_number = 0
 quad_list = []
-num_flag = 1
-jump_label_num = 0
 
 # Symbol Table variables
 scope_list = []
@@ -36,6 +34,9 @@ sb_file_str = ""
 # Final code
 final_code_list = ["L0:", "b Lmain"]
 number_of_params = 0
+first_parameter = True
+num_flag = 1
+jump_label_num = 0
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -380,6 +381,7 @@ class Parser:
 
                 if PRINT_SCOPE_LIST:
                     print_scope_list()
+                print(scope_list[0].variable_offset)
                 save_symbol_table()
                 delete_scope()
                 if token.recognized_string == ".":
@@ -396,7 +398,7 @@ class Parser:
             self.__error("KEYWORD PROGRAM NOT FOUND")
 
     def __block(self, block_name):
-        global token
+        global token, first_parameter
         if token.recognized_string == "{":
             token = self.__get_token()
             self.__declarations()
@@ -421,10 +423,10 @@ class Parser:
         # Generate Risk-V code
 
         if GENERATE_RISKV_CODE:
+            first_parameter = True
             # print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
             if block_name == program_name:
                 riskv_write(f"Lmain:")
-
 
             for quad in quad_list[block_start_quad-2:]:
                 # print(quad)
@@ -1323,6 +1325,7 @@ def generate_riskv(quad, block_name):
     global number_of_params
     global num_flag
     global jump_label_num
+    global first_parameter
 
     riskv_write(f"L{num_flag}:")
     num_flag += 1
@@ -1384,8 +1387,11 @@ def generate_riskv(quad, block_name):
             block_nesting_level = block_function.nesting_level
             frame_length = block_function.frame_length
 
-        if quad.operand2 == "CV":
+        if first_parameter:
             riskv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
+            first_parameter = False
+
+        if quad.operand2 == "CV":
             loadvr(quad.operand1, "0")
             riskv_write(f"sw t0, -({12+4*number_of_params})(fp)")
         elif quad.operand2 == "REF":
@@ -1413,6 +1419,7 @@ def generate_riskv(quad, block_name):
             riskv_write(f"sw t0, -8(fp)")
 
         number_of_params += 1
+
     elif quad.operator == "call":
 
         if block_name == program_name:

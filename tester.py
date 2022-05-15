@@ -23,6 +23,13 @@ def file_to_list(filename):
     return file_list
 
 
+def list_to_str(file_list):
+    file_str = ""
+    for line in file_list:
+        file_str = file_str + line + "\n"
+    return file_str
+
+
 class CompilerTester(unittest.TestCase):
 
     def test_quad_programs(self):
@@ -92,7 +99,19 @@ class CompilerTester(unittest.TestCase):
     def test_riskv_code(self):
         met.GENERATE_RISKV_CODE = True
         program = "tests/final_code/ex1.ci"
-        expected = "tests/final_code/expected/ex1_expected.txt"
+        expected_file = "tests/final_code/expected/ex1_expected.txt"
 
-        self.__test_quad_list(program, expected, met.final_code_list)
+        # self.__test_quad_list(program, expected, met.final_code_list)
 
+        test_name = program.split("/")
+        test_name = test_name[len(test_name)-1]
+        print(Fore.CYAN + "Processing " + test_name + "...")
+        lex_object = Lex(1, program, None)
+        parser_obj = Parser(lex_object)
+        parser_obj.syntax_analyzer()
+
+        expected_list = file_to_list(expected_file)
+        expected_str = list_to_str(expected_list)
+
+        actual_str = list_to_str(met.final_code_list)
+        self.assertEqual(expected_str, actual_str)
