@@ -1,0 +1,5 @@
+program main
+{
+    declare A;
+    A:=1;
+}.

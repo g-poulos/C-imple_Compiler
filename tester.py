@@ -53,8 +53,7 @@ class CompilerTester(unittest.TestCase):
         reset_global_variables()
         print(Fore.GREEN + "DONE\n")
 
-    @staticmethod
-    def test_complete_programs():
+    def test_complete_programs(self):
         met.GENERATE_RISKV_CODE = False
 
         directory = "tests/complete_programs"
@@ -98,8 +97,8 @@ class CompilerTester(unittest.TestCase):
 
     def test_riskv_code(self):
         met.GENERATE_RISKV_CODE = True
-        program = "tests/final_code/ex1.ci"
-        expected_file = "tests/final_code/expected/ex1_expected.txt"
+        program = "tests/final_code/ex2.ci"
+        expected_file = "tests/final_code/expected/ex2_expected.txt"
 
         # self.__test_quad_list(program, expected, met.final_code_list)
 

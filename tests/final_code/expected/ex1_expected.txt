@@ -28,10 +28,10 @@ addi sp, sp, 28
 move gp, sp
 L8:
 li t1, 1
-sw t1, -12(sp)
+sw t1, -12(gp)
 L9:
 addi fp, sp, 24
-lw t1, -12(sp)
+lw t1, -12(gp)
 sw t1, -12(fp)
 L10:
 addi t0, sp, -16
@@ -47,3 +47,13 @@ addi sp, sp, -24
 L13:
 lw t1, -24(sp)
 sw t1, -20(sp)
+L14:
+lw t1, -20(sp)
+L15:
+lw t1, -16(sp)
+L16:
+li a0, 0
+li a7,93
+ecall
+L17:
+lw ra, -0(sp)

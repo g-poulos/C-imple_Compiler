@@ -381,7 +381,6 @@ class Parser:
 
                 if PRINT_SCOPE_LIST:
                     print_scope_list()
-                print("Main offset " + str(scope_list[0].variable_offset))
                 save_symbol_table()
                 delete_scope()
                 if token.recognized_string == ".":
@@ -718,10 +717,17 @@ class Parser:
     def __call_stat(self):
         global token
         token = self.__get_token()
-        self.__idvalue()
+        function_id = self.__idvalue()
         if token.recognized_string == "(":
             token = self.__get_token()
-            self.__actualparlist()
+            par_list = self.__actualparlist()
+            if par_list != [None]:
+                for par in par_list:
+                    gen_quad("par", par[0], par[1], "_")
+                temp_var = new_temp()
+                gen_quad("par", temp_var, "RET", "_")
+                gen_quad("call", function_id, "_", "_")
+
             if not token.recognized_string == ")":
                 self.__error("callStat")
             token = self.__get_token()
@@ -1260,6 +1266,9 @@ def loadvr(v, r):
             riskv_write(f"t{r}, (t0)")
         else:
             print("ERROR : loadvr")
+            print(entity, end=" ")
+            print(entity_level)
+            print(current_level)
             sys.exit(-1)
 
 
@@ -1331,7 +1340,7 @@ def generate_riskv(quad, block_name):
     num_flag += 1
 
     if quad.operator == "jump":
-        riskv_write(f"b {quad.quad_label}")
+        riskv_write(f"j {quad.quad_label}")
 
     elif quad.operator == "begin_block":
         if block_name == program_name:
@@ -1352,7 +1361,7 @@ def generate_riskv(quad, block_name):
 
     elif quad.operator == "out":
         entity, level = find_in_symbol_table(quad.operand1)
-        riskv_write(f"lw, t1, -{entity.offset}(sp)")
+        riskv_write(f"lw t1, -{entity.offset}(sp)")
 
     elif quad.operator == "halt":
         riskv_write(f"li a0, 0")
@@ -1422,10 +1431,10 @@ def generate_riskv(quad, block_name):
 
         if block_name == program_name:
             caller_level = 0
-            #frame_length = scope_list[0].variable_offset
+            # frame_length = scope_list[0].variable_offset
         else:
             caller, caller_level = find_in_symbol_table(block_name)
-            #frame_length = caller.frame_length
+            # frame_length = caller.frame_length
 
         callee, callee_level = find_in_symbol_table(quad.operand1)
 
