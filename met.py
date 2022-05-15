@@ -1325,7 +1325,6 @@ def storerv(r, v):
 def generate_riskv(quad, block_name):
     global number_of_params
     global num_flag
-    global jump_label_num
     global first_parameter
 
     riskv_write(f"L{num_flag}:")
@@ -1340,8 +1339,6 @@ def generate_riskv(quad, block_name):
             riskv_write(f"move gp, sp")
         else:
             riskv_write(f"sw ra, -0(sp)")
-
-            jump_label_num = num_flag - 1
 
     elif quad.operator == "end_block":
         riskv_write(f"lw ra, -0(sp)")
@@ -1383,7 +1380,7 @@ def generate_riskv(quad, block_name):
 
         if block_name == program_name:
             caller_level = 0
-            frame_length = scope_list[0].variable_offset
+            frame_length = entity.offset + 12+4*number_of_params #scope_list[0].variable_offset
 
         else:
             caller, caller_level = find_in_symbol_table(block_name)
@@ -1394,8 +1391,8 @@ def generate_riskv(quad, block_name):
             first_parameter = False
 
         if quad.operand2 == "CV":
-            loadvr(quad.operand1, "0")
-            riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
+            loadvr(quad.operand1, "1")
+            riskv_write(f"sw t1, -{12+4*number_of_params}(fp)")
         elif quad.operand2 == "REF":
             if caller_level == entity_level:
 
@@ -1419,17 +1416,16 @@ def generate_riskv(quad, block_name):
         elif quad.operand2 == "RET":
             riskv_write(f"addi t0, sp, -{entity.offset}")
             riskv_write(f"sw t0, -8(fp)")
-
         number_of_params += 1
 
     elif quad.operator == "call":
 
         if block_name == program_name:
             caller_level = 0
-            frame_length = scope_list[0].variable_offset
+            #frame_length = scope_list[0].variable_offset
         else:
             caller, caller_level = find_in_symbol_table(block_name)
-            frame_length = caller.frame_length
+            #frame_length = caller.frame_length
 
         callee, callee_level = find_in_symbol_table(quad.operand1)
 
@@ -1437,13 +1433,11 @@ def generate_riskv(quad, block_name):
             riskv_write(f"lw t0, -4(sp)")
             riskv_write(f"sw t0, -4(fp)")
         else:
-            riskv_write(f"lw t0, -4(sp)")
             riskv_write(f"sw sp, -4(fp)")
 
-        riskv_write(f"addi sp, sp, {frame_length}")
+        riskv_write(f"addi sp, sp, {callee.frame_length}")
         riskv_write(f"jal L{callee.start_quad-1}")
-        # riskv_write(f"sw ra, sp")
-        riskv_write(f"addi sp, sp, -{frame_length}")
+        riskv_write(f"addi sp, sp, -{callee.frame_length}")
 
 
 def convert_to_riskv_branch(operator):
