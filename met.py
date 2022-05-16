@@ -1403,7 +1403,7 @@ def generate_riskv(quad, block_name):
             frame_length = caller.frame_length
 
         if first_parameter:
-            riskv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
+            riskv_write(f"addi fp, sp, {frame_length}")
             first_parameter = False
 
         if quad.operand2 == "CV":
