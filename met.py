@@ -5,7 +5,7 @@ import os
 import sys
 
 PRINT_SCOPE_LIST = False
-GENERATE_RISKV_CODE = True
+GENERATE_RISCV_CODE = True
 DEFAULT_VARIABLE_OFFSET = 12
 FILE_NAME = ""
 
@@ -419,20 +419,20 @@ class Parser:
                 self.__error("BLOCK_}")
         else:
             self.__error("BLOCK_{")
-        # Generate Risk-V code
+        # Generate Risc-V code
 
-        if GENERATE_RISKV_CODE:
+        if GENERATE_RISCV_CODE:
             first_parameter = True
             # print(f"_________{str(block_start_quad-1)}__{str(block_name)}__________")
             if block_name == program_name:
-                riskv_write(f"Lmain:")
+                riscv_write(f"Lmain:")
 
             for quad in quad_list[block_start_quad-2:]:
                 # print(quad)
-                generate_riskv(quad, block_name)
+                generate_riscv(quad, block_name)
 
-            # print("\n---------RISKV---------")
-            # print_riskv_commands()
+            # print("\n---------RISCV---------")
+            # print_riscv_commands()
 
     def __declarations(self):
         global token
@@ -1232,7 +1232,7 @@ def add_entity(entity):
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
-def riskv_write(command):
+def riscv_write(command):
     print(command)
     final_code_list.append(command)
 
@@ -1241,34 +1241,34 @@ def gnvlcode(v):
     global final_code_list
     entity, entity_nesting_level = find_in_symbol_table(v)
     levels = scope_list[-1].nesting_level - entity_nesting_level
-    riskv_write(f"lw t0, -4(sp)")
+    riscv_write(f"lw t0, -4(sp)")
     for i in range(levels):
-        riskv_write(f"lw t0, -4(t0)")
-    riskv_write(f"addi t0, t0, -{entity.offset}")
+        riscv_write(f"lw t0, -4(t0)")
+    riscv_write(f"addi t0, t0, -{entity.offset}")
 
 
 def loadvr(v, r):
     # print(f"LOADVR {v} {r}")
     if v.isnumeric():                   # Constant
-        riskv_write(f"li t{r}, {v}")
+        riscv_write(f"li t{r}, {v}")
     else:
         entity, entity_level = find_in_symbol_table(v)
         current_level = scope_list[-1].nesting_level
         
         if entity.type_of_entity == "Variable" and entity_level == 0:
-            riskv_write(f"lw t{r}, -{entity.offset}(gp)")
+            riscv_write(f"lw t{r}, -{entity.offset}(gp)")
         elif entity_level == current_level and local_var_cv_par_temp_var(entity):
-            riskv_write(f"lw t{r}, -{entity.offset}(sp)")
+            riscv_write(f"lw t{r}, -{entity.offset}(sp)")
         elif entity_level == current_level and ref_param(entity):
-            riskv_write(f"lw t0, -{entity.offset}(sp)")
-            riskv_write(f"lw t{r}, (t0)")
+            riscv_write(f"lw t0, -{entity.offset}(sp)")
+            riscv_write(f"lw t{r}, (t0)")
         elif entity_level < current_level and local_var_cv_par(entity):
             gnvlcode(v)
-            riskv_write(f"lw t{r}, (t0)")
+            riscv_write(f"lw t{r}, (t0)")
         elif entity_level < current_level and ref_param(entity):
             gnvlcode(v)
-            riskv_write(f"lw t0, (t0)")
-            riskv_write(f"t{r}, (t0)")
+            riscv_write(f"lw t0, (t0)")
+            riscv_write(f"t{r}, (t0)")
         else:
             print("ERROR : loadvr")
             print(entity, end=" ")
@@ -1314,20 +1314,20 @@ def storerv(r, v):
         current_level = scope_list[-1].nesting_level
 
         if entity.type_of_entity == "Variable" and entity_level == 0:
-            riskv_write(f"sw t{r}, -{entity.offset}(gp)")
+            riscv_write(f"sw t{r}, -{entity.offset}(gp)")
         elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level == current_level) or \
                 entity.type_of_entity == "TempVariable":
-            riskv_write(f"sw t{r}, -{entity.offset}(sp)")
+            riscv_write(f"sw t{r}, -{entity.offset}(sp)")
         elif ref_param(entity) and entity_level == current_level:
-            riskv_write(f"lw t0, -{entity.offset}(sp)")
-            riskv_write(f"sw t{r}, (t0)")
+            riscv_write(f"lw t0, -{entity.offset}(sp)")
+            riscv_write(f"sw t{r}, (t0)")
         elif entity.type_of_entity == "Variable" or (cv_param(entity) and entity_level < current_level):
             gnvlcode(v)
-            riskv_write(f"sw t{r}, (t0)")
+            riscv_write(f"sw t{r}, (t0)")
         elif ref_param(entity) and entity_level < current_level:
             gnvlcode(v)
-            riskv_write(f"lw t0, (t0)")
-            riskv_write(f"sw t{r}, (t0)")
+            riscv_write(f"lw t0, (t0)")
+            riscv_write(f"sw t{r}, (t0)")
         else:
             print(f"ERROR : storerv {r} {v}")   # TODO: cleanup
             print(entity, end=" ")
@@ -1336,58 +1336,58 @@ def storerv(r, v):
             sys.exit(-1)
 
 
-def generate_riskv(quad, block_name):
+def generate_riscv(quad, block_name):
     global number_of_params
     global num_flag
     global first_parameter
 
-    riskv_write(f"L{num_flag}:")
+    riscv_write(f"L{num_flag}:")
     num_flag += 1
 
     if quad.operator == "jump":
-        riskv_write(f"j {quad.quad_label}")
+        riscv_write(f"j {quad.quad_label}")
 
     elif quad.operator == "begin_block":
         if block_name == program_name:
-            riskv_write(f"addi sp, sp, {scope_list[0].variable_offset}")
-            riskv_write(f"move gp, sp")
+            riscv_write(f"addi sp, sp, {scope_list[0].variable_offset}")
+            riscv_write(f"move gp, sp")
         else:
-            riskv_write(f"sw ra, -0(sp)")
+            riscv_write(f"sw ra, -0(sp)")
 
     elif quad.operator == "end_block":
-        riskv_write(f"lw ra, -0(sp)")
-        riskv_write(f"jr ra")
+        riscv_write(f"lw ra, -0(sp)")
+        riscv_write(f"jr ra")
 
     elif quad.operator in rel_op_list:
-        riskv_operator = convert_to_riskv_branch(quad.operator)
+        riscv_operator = convert_to_riscv_branch(quad.operator)
         loadvr(quad.operand1, "1")
         loadvr(quad.operand2, "2")
-        riskv_write(f"{riskv_operator}, t1, t2, {quad.operand3}")
+        riscv_write(f"{riscv_operator}, t1, t2, {quad.operand3}")
 
     elif quad.operator == "out":
         entity, level = find_in_symbol_table(quad.operand1)
-        riskv_write(f"lw t1, -{entity.offset}(sp)")
+        riscv_write(f"lw t1, -{entity.offset}(sp)")
 
     elif quad.operator == "halt":
-        riskv_write(f"li a0, 0")
-        riskv_write(f"li a7,93")
-        riskv_write(f"ecall")
+        riscv_write(f"li a0, 0")
+        riscv_write(f"li a7,93")
+        riscv_write(f"ecall")
 
     elif quad.operator == ":=":
         loadvr(quad.operand1, "1")
         storerv("1", quad.operand3)
 
     elif quad.operator in operator_list:
-        riskv_operator = convert_to_riskv_operator(quad.operator)
+        riscv_operator = convert_to_riscv_operator(quad.operator)
         loadvr(quad.operand1, "1")
         loadvr(quad.operand2, "2")
-        riskv_write(f"{riskv_operator} t1, t1, t2")
+        riscv_write(f"{riscv_operator} t1, t1, t2")
         storerv("1", quad.operand3)
 
     elif quad.operator == "RET":
         loadvr(quad.operand1, "1")
-        riskv_write(f"lw t0, -8(sp)")
-        riskv_write(f"sw t1, (t0)")
+        riscv_write(f"lw t0, -8(sp)")
+        riscv_write(f"sw t1, (t0)")
 
     elif quad.operator == "par":
         entity, entity_level = find_in_symbol_table(quad.operand1)
@@ -1401,35 +1401,35 @@ def generate_riskv(quad, block_name):
             frame_length = caller.frame_length
 
         if first_parameter:
-            riskv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
+            riscv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
             first_parameter = False
 
         if quad.operand2 == "CV":
             loadvr(quad.operand1, "1")
-            riskv_write(f"sw t1, -{12+4*number_of_params}(fp)")
+            riscv_write(f"sw t1, -{12 + 4 * number_of_params}(fp)")
         elif quad.operand2 == "REF":
             if caller_level == entity_level:
 
                 if entity.type_of_entity == "Variable" or cv_param(entity):
-                    riskv_write(f"addi t0, sp, -{entity.offset}")
-                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
+                    riscv_write(f"addi t0, sp, -{entity.offset}")
+                    riscv_write(f"sw t0, -{12 + 4 * number_of_params}(fp)")
 
                 elif ref_param(entity):
-                    riskv_write(f"lw t0, -{entity.offset}(sp)")
-                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
+                    riscv_write(f"lw t0, -{entity.offset}(sp)")
+                    riscv_write(f"sw t0, -{12 + 4 * number_of_params}(fp)")
             else:
                 if entity.type_of_entity == "Variable" or cv_param(entity):
                     gnvlcode(quad.operand1)
-                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
+                    riscv_write(f"sw t0, -{12 + 4 * number_of_params}(fp)")
 
                 elif ref_param(entity):
                     gnvlcode(quad.operand1)
-                    riskv_write(f"lw t0, (t0)")
-                    riskv_write(f"sw t0, -{12+4*number_of_params}(fp)")
+                    riscv_write(f"lw t0, (t0)")
+                    riscv_write(f"sw t0, -{12 + 4 * number_of_params}(fp)")
 
         elif quad.operand2 == "RET":
-            riskv_write(f"addi t0, sp, -{entity.offset}")
-            riskv_write(f"sw t0, -8(fp)")
+            riscv_write(f"addi t0, sp, -{entity.offset}")
+            riscv_write(f"sw t0, -8(fp)")
         number_of_params += 1
 
     elif quad.operator == "call":
@@ -1444,45 +1444,45 @@ def generate_riskv(quad, block_name):
         callee, callee_level = find_in_symbol_table(quad.operand1)
 
         if caller_level == callee_level:
-            riskv_write(f"lw t0, -4(sp)")
-            riskv_write(f"sw t0, -4(fp)")
+            riscv_write(f"lw t0, -4(sp)")
+            riscv_write(f"sw t0, -4(fp)")
         else:
-            riskv_write(f"sw sp, -4(fp)")
+            riscv_write(f"sw sp, -4(fp)")
 
-        riskv_write(f"addi sp, sp, {callee.frame_length}")
-        riskv_write(f"jal L{callee.start_quad-1}")
-        riskv_write(f"addi sp, sp, -{callee.frame_length}")
+        riscv_write(f"addi sp, sp, {callee.frame_length}")
+        riscv_write(f"jal L{callee.start_quad - 1}")
+        riscv_write(f"addi sp, sp, -{callee.frame_length}")
 
 
-def convert_to_riskv_branch(operator):
-    rel_op_to_riskv = [["=", "beq"], ["<", "blt"], [">", "bgt"],
+def convert_to_riscv_branch(operator):
+    rel_op_to_riscv = [["=", "beq"], ["<", "blt"], [">", "bgt"],
                        ["<=", "ble"], [">=", "bge"], ["<>", "bne"]]
-    for riskv_op in rel_op_to_riskv:
-        if operator == riskv_op[0]:
-            return riskv_op[1]
+    for riscv_op in rel_op_to_riscv:
+        if operator == riscv_op[0]:
+            return riscv_op[1]
     return "OP_MATCH_FAILED"
 
 
-def convert_to_riskv_operator(operator):
-    op_to_riskv = [["+", "add"], ["-", "sub"], ["*", "mul"], ["/", "div"]]
+def convert_to_riscv_operator(operator):
+    op_to_riscv = [["+", "add"], ["-", "sub"], ["*", "mul"], ["/", "div"]]
 
-    for riskv_op in op_to_riskv:
-        if operator == riskv_op[0]:
-            return riskv_op[1]
+    for riscv_op in op_to_riscv:
+        if operator == riscv_op[0]:
+            return riscv_op[1]
     return "OP_MATCH_FAILED"
 
 
-def write_riskv_file():
-    riskv_file_name = FILE_NAME + ".asm"
-    if os.path.exists(riskv_file_name):
-        os.remove(riskv_file_name)
-    riskv_file = open(riskv_file_name, "a")
+def write_riscv_file():
+    riscv_file_name = FILE_NAME + ".asm"
+    if os.path.exists(riscv_file_name):
+        os.remove(riscv_file_name)
+    riscv_file = open(riscv_file_name, "a")
     for command in final_code_list:
-        riskv_file.write(command + "\n")
-    riskv_file.close()
+        riscv_file.write(command + "\n")
+    riscv_file.close()
 
 
-def print_riskv_commands():
+def print_riscv_commands():
     for command in final_code_list:
         print(command)
 
@@ -1503,8 +1503,8 @@ def main():
     convert_int()
     convert_c()
 
-    write_riskv_file()
-    print_riskv_commands()
+    write_riscv_file()
+    print_riscv_commands()
 
 
 if __name__ == "__main__":

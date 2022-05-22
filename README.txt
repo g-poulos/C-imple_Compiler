@@ -10,13 +10,17 @@
                       quads after the compilation. This folder also contains a
                       sub-folder with the expected output of each test.
     - 'symbol_table': Programs from the course material to test the symbol table. Its
-                      functionality was also confirmed with programs from the other test
+                      expected output was also tested with programs from the other test
                       directories.
     - 'c_convertable': Programs that can be compiled and converted to C. The .c file
                        can then be also compiled and run. All programs expect an input
                        from the user.
+    - 'final_code': Programs from the class material that can be compiled and converted
+                    to risc-v assembly code.
+                    The programs in the 'c_convertable' directory can also be compiled
+                    and converted to assembly code.
 * The 'complete_programs' and 'intermediate' tests were automatically being run in every
-  code addition to ensure the functionality of the compiler.
+  code addition to ensure the correct functionality of the compiler.
 * The implementation of the compiler follows the object-oriented structure which is
   described in the course material.
 
@@ -41,3 +45,5 @@
         -------------       -------------       -------------       --------------      ---------------
         |  Function |       |  Variable |       | Parameter |       |TempVariable|      |   Argument  |
         -------------       -------------       -------------       --------------      ---------------
+
+*

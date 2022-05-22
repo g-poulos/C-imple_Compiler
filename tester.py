@@ -33,7 +33,7 @@ def list_to_str(file_list):
 class CompilerTester(unittest.TestCase):
 
     def test_quad_programs(self):
-        met.GENERATE_RISKV_CODE = False
+        met.GENERATE_RISCV_CODE = False
         for pair in program_pairs:
             self.__test_quad_list(pair[0], pair[1], met.quad_list)
 
@@ -54,7 +54,7 @@ class CompilerTester(unittest.TestCase):
         print(Fore.GREEN + "DONE\n")
 
     def test_complete_programs(self):
-        met.GENERATE_RISKV_CODE = False
+        met.GENERATE_RISCV_CODE = False
 
         directory = "tests/complete_programs"
         program_list = os.listdir(directory)
@@ -96,7 +96,7 @@ class CompilerTester(unittest.TestCase):
         self.assertFalse(cv_param(temp_var))
 
     def test_riskv_code(self):
-        met.GENERATE_RISKV_CODE = True
+        met.GENERATE_RISCV_CODE = True
         program = "tests/final_code/ex2.ci"
         expected_file = "tests/final_code/expected/ex2_expected.txt"
 
