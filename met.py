@@ -36,7 +36,7 @@ final_code_list = ["L0:", "b Lmain"]
 number_of_params = 0
 first_parameter = True
 num_flag = 1
-jump_label_num = 0
+former_block_name = ""
 
 
 def reset_global_variables():  # Resets global variables for testing
@@ -1340,6 +1340,7 @@ def generate_riscv(quad, block_name):
     global number_of_params
     global num_flag
     global first_parameter
+    global former_block_name
 
     riscv_write(f"L{num_flag}:")
     num_flag += 1
@@ -1348,15 +1349,17 @@ def generate_riscv(quad, block_name):
         riscv_write(f"j {quad.quad_label}")
 
     elif quad.operator == "begin_block":
+        if quad.operand1 != "main":
+            former_block_name = quad.operand1
         if block_name == program_name:
             riscv_write(f"addi sp, sp, {scope_list[0].variable_offset}")
             riscv_write(f"move gp, sp")
         else:
             riscv_write(f"sw ra, -0(sp)")
 
-    elif quad.operator == "end_block":
-        riscv_write(f"lw ra, -0(sp)")
-        riscv_write(f"jr ra")
+    elif quad.operator == "end_block" and block_name != program_name:
+        riskv_write(f"lw ra, -0(sp)")
+        riskv_write(f"jr ra")
 
     elif quad.operator in rel_op_list:
         riscv_operator = convert_to_riscv_branch(quad.operator)
@@ -1390,24 +1393,24 @@ def generate_riscv(quad, block_name):
         riscv_write(f"sw t1, (t0)")
 
     elif quad.operator == "par":
-        entity, entity_level = find_in_symbol_table(quad.operand1)
+        entity, entity_level = find_in_symbol_table(former_block_name)
 
         if block_name == program_name:
             caller_level = 0
-            frame_length = entity.offset + 12+4*number_of_params #scope_list[0].variable_offset
-
+            frame_length = entity.frame_length
         else:
             caller, caller_level = find_in_symbol_table(block_name)
             frame_length = caller.frame_length
 
         if first_parameter:
-            riscv_write(f"addi fp, sp, {frame_length}")  # TODO: calculate frame length
+            riscv_write(f"addi fp, sp, {frame_length}")
             first_parameter = False
 
         if quad.operand2 == "CV":
             loadvr(quad.operand1, "1")
             riscv_write(f"sw t1, -{12 + 4 * number_of_params}(fp)")
         elif quad.operand2 == "REF":
+            entity, entity_level = find_in_symbol_table(quad.operand1)
             if caller_level == entity_level:
 
                 if entity.type_of_entity == "Variable" or cv_param(entity):
@@ -1428,6 +1431,7 @@ def generate_riscv(quad, block_name):
                     riscv_write(f"sw t0, -{12 + 4 * number_of_params}(fp)")
 
         elif quad.operand2 == "RET":
+            entity, entity_level = find_in_symbol_table(quad.operand1)
             riscv_write(f"addi t0, sp, -{entity.offset}")
             riscv_write(f"sw t0, -8(fp)")
         number_of_params += 1
