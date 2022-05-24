@@ -3,13 +3,13 @@ program main
     declare a,A,B;
     function f1(in a, inout b)
     {
-        function f2()
+        function f2(in a)
         {
             B:=A;
             b:=a;
         }
         A:=2;
-        call f2();
+        call f2(in a);
 
     }
     a:=3;

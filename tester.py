@@ -95,7 +95,7 @@ class CompilerTester(unittest.TestCase):
         self.assertFalse(cv_param(ref_par))
         self.assertFalse(cv_param(temp_var))
 
-    def test_riskv_code(self):
+    def test_riscv_code(self):
         met.GENERATE_RISCV_CODE = True
         program = "tests/final_code/ex2.ci"
         expected_file = "tests/final_code/expected/ex2_expected.txt"

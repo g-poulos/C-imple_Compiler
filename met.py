@@ -722,7 +722,6 @@ class Parser:
         global token
         token = self.__get_token()
         function_id = self.__idvalue()
-        print("AAAAAAAAAAAAAAAAAAAAAA" + function_id)
         if token.recognized_string == "(":
             token = self.__get_token()
             par_list = self.__actualparlist()
@@ -1228,12 +1227,11 @@ def add_entity(entity):
             entity.type_of_entity == "Variable" or \
             entity.type_of_entity == "TempVariable":
         scope_list[-1].variable_offset = scope_list[-1].variable_offset + 4
-        print(f"ADDED TO SCOPE {len(scope_list)-1} {scope_list[-1].variable_offset} {entity} {entity.type_of_entity}")
+        # print(f"ADDED TO SCOPE {len(scope_list)-1} {scope_list[-1].variable_offset} {entity} {entity.type_of_entity}")
     scope_list[len(scope_list)-1].add_entity(entity)
 
 
 def riscv_write(command):
-    print(command)
     final_code_list.append(command)
 
 
@@ -1358,8 +1356,8 @@ def generate_riscv(quad, block_name):
             riscv_write(f"sw ra, -0(sp)")
 
     elif quad.operator == "end_block" and block_name != program_name:
-        riskv_write(f"lw ra, -0(sp)")
-        riskv_write(f"jr ra")
+        riscv_write(f"lw ra, -0(sp)")
+        riscv_write(f"jr ra")
 
     elif quad.operator in rel_op_list:
         riscv_operator = convert_to_riscv_branch(quad.operator)
@@ -1508,7 +1506,7 @@ def main():
     convert_c()
 
     write_riscv_file()
-    print_riscv_commands()
+    # print_riscv_commands()
 
 
 if __name__ == "__main__":
