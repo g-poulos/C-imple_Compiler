@@ -4,11 +4,11 @@
 * Usage: $python3 met.py <inputfile>
 * The programs in the 'test' folder where used to test the compiler. The sub-folders
   contain:
-    - 'lex' and 'syntax': small programs that are expected to fail the compilation.
+    - 'lex' and 'syntax': Small sized programs that are expected to fail the compilation.
     - 'complete_programs': Complete programs that can be compiled without errors.
-    - 'intermediate': Complete and small programs that where used to test the generated
-                      quads after the compilation. This folder also contains a
-                      sub-folder with the expected output of each test.
+    - 'intermediate': Complete and small sized programs that where used to test the
+                      generated quads after the compilation. This folder also contains
+                      a sub-folder with the expected output of each test.
     - 'symbol_table': Programs from the course material to test the symbol table. Its
                       expected output was also tested with programs from the other test
                       directories.
@@ -23,6 +23,11 @@
   code addition to ensure the correct functionality of the compiler.
 * The implementation of the compiler follows the object-oriented structure which is
   described in the course material.
+* To implement the functions of the final code, as mentioned, the class material examples
+  were used to create a Junit-styled test with expected outcome. The outcome of the class
+  material assembly code was altered to correct potential typos. In order to test the final
+  assembly code several risk-v compilers were used but the pseudo instructions that our
+  compiler is generating were not included.
 
 
   A simple class diagram is shown below:
@@ -45,5 +50,3 @@
         -------------       -------------       -------------       --------------      ---------------
         |  Function |       |  Variable |       | Parameter |       |TempVariable|      |   Argument  |
         -------------       -------------       -------------       --------------      ---------------
-
-*
